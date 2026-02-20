@@ -1,0 +1,82 @@
+openapi: 3.1.0
+info:
+  title: LapStream Server API
+  version: 0.1.0
+  description: Starter OpenAPI spec with a single newUser endpoint.
+servers:
+  - url: http://localhost:4000
+    description: Local development server
+paths:
+  /newUser:
+    post:
+      operationId: newUser
+      summary: Create a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewUserRequest'
+      responses:
+        '201':
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NewUserResponse'
+        '400':
+          description: Invalid request payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  schemas:
+    NewUserRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - email
+        - firstName
+        - lastName
+      properties:
+        email:
+          type: string
+          format: email
+        firstName:
+          type: string
+          minLength: 1
+        lastName:
+          type: string
+          minLength: 1
+    NewUserResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - email
+        - firstName
+        - lastName
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        firstName:
+          type: string
+        lastName:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    ErrorResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - message
+      properties:
+        message:
+          type: string
