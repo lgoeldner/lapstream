@@ -1,0 +1,12 @@
+{
+    "paceGroups": [
+        {
+            "name": "slow",
+            "count": 10
+        },
+        {
+            "name": "fast",
+            "count": 5
+        }
+    ]
+}

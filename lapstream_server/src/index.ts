@@ -1,13 +1,13 @@
 import { buildApp } from './app.js';
 import { env } from './config/env.js';
-import { drizzle } from "drizzle-orm/node-postgres";
-import { Pool } from 'pg';
-import { usersTable } from './db/schema.js'
+import { doSync } from './config/slotsync.js';
 
 const start = async (): Promise<void> => {
-    const db = drizzle(env.DATABASE_URL);
+    // sync up the server side config with the database state
+    await doSync();
 
-    const app = buildApp({ db });
+    const app = buildApp();
+    
 
     const server = app.listen(env.PORT, env.HOST, () => {
         console.log(`lapstream-server listening on http://${env.HOST}:${env.PORT}`);
