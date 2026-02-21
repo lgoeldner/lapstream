@@ -11,6 +11,7 @@ export const playersTable = pgTable("players", {
 
 /**
  * contains all slots for players. Every slot may be taken by up to one player.
+ * TODO: make paceGroup and slotIndex be the primary Key
  */
 export const playerSlotTable = pgTable("player_slot", {
     id: integer().primaryKey().generatedAlwaysAsIdentity(),
@@ -18,6 +19,8 @@ export const playerSlotTable = pgTable("player_slot", {
     slotIndex: integer("slot_index").notNull(),
     assignedPlayer: integer().default(sql`NULL`).references(() => playersTable.id)
 });
+export type playerSlotRow = typeof playerSlotTable.$inferSelect
+
 
 export const playerSlotVersionTable = pgTable("player_slot_versioning", {
     id: integer().primaryKey().generatedAlwaysAsIdentity(),

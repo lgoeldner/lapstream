@@ -1,5 +1,6 @@
 import { buildApp } from './app.js';
 import { env } from './config/env.js';
+import { logger } from './logger.js';
 import { doSync } from './config/slotsync.js';
 
 const start = async (): Promise<void> => {
@@ -10,7 +11,7 @@ const start = async (): Promise<void> => {
     
 
     const server = app.listen(env.PORT, env.HOST, () => {
-        console.log(`lapstream-server listening on http://${env.HOST}:${env.PORT}`);
+        logger.info(`lapstream-server listening on http://${env.HOST}:${env.PORT}`);
     });
 
     const shutdown = async (): Promise<void> => {
@@ -24,6 +25,10 @@ const start = async (): Promise<void> => {
 };
 
 start().catch((error: unknown) => {
-    console.error(error);
+    if (error instanceof Error) {
+        logger.error({ err: error }, 'failed to start server');
+    } else {
+        logger.error({ err: String(error) }, 'failed to start server');
+    }
     process.exit(1);
 });

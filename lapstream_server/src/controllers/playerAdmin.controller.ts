@@ -5,7 +5,8 @@
 
 import type { RequestHandler } from 'express';
 import { z } from 'zod';
-import { assignPlayerToSlot, registerPlayer, removePlayerFromSlot } from '../services/playerAdmin.service.js';
+import { assignPlayerToSlot, getPlayerSlots, registerPlayer, removePlayerFromSlot } from '../services/playerAdmin.service.js';
+import { logger } from '../logger.js';
 
 const newUserSchema = z.object({
     name: z.string(),
@@ -19,8 +20,8 @@ const newUserSchema = z.object({
 export const registerPlayerController: RequestHandler = async (req, res) => {
     const p = newUserSchema.safeParse(req.body);
     if (p.success) {
-        const id = await registerPlayer(p.data);
-        return res.status(201).json({ status: 'success', id });
+        const data = await registerPlayer(p.data);
+        return res.status(201).json({ status: 'ok', data });
     }
 
     return res.status(500).json({ status: 'failure', err: p.error });
@@ -39,32 +40,30 @@ export type assignPlayerDTO = z.infer<typeof assignPlayerSchema>;
 
 export const assignPlayerToSlotController: RequestHandler = async (req, res) => {
     const r = assignPlayerSchema.safeParse(req.body);
-    console.log(r);
+    logger.debug({ parseResult: r }, 'assign player payload parsed');
     if (!r.success)
         return res.status(500).json({ status: "failure", err: r.error });
     const rs = await assignPlayerToSlot(r.data);
 
-    if (rs === 'failure')
-        return res.status(400).json({ status: "failure", err: 'player already assigned' });
+    if (rs.status === 'failure')
+        return res.status(400).json(rs);
 
-    return res.status(201).json({ status: "success" });
+    return res.status(201).json(rs);
 };
 
-const removePlayerSchema = z.object({
-    id: z.int()
-});
-export type removePlayerDTO = z.infer<typeof removePlayerSchema>;
-
 export const removePlayerFromSlotController: RequestHandler = async (req, res) => {
-    const r = removePlayerSchema.safeParse(req.body);
+    const player_id = parseInt(req.params.id as string);
 
+    if (!player_id)
+        return { status: 'failure', err: 'missing player ID' };
 
-    if (r.success) {
-        const ret = await removePlayerFromSlot(r.data);
+    const ret = await removePlayerFromSlot(player_id);
 
-        if (ret === 'success')
-            return res.status(200).json({ status: ret });
-    }
+    return res.status((ret.status === 'ok') ? 200 : 400).json(ret);
+};
 
-    return res.status(400).json({ status: "failure", err: r.error ?? 'player not found' });
+export const getPlayerSlotsController: RequestHandler = async (req, res) => {
+    const data = await getPlayerSlots();
+    logger.info(`returning: ${JSON.stringify(data)}`);
+    return res.status(200).json(data);
 };

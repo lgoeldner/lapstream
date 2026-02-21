@@ -8,6 +8,7 @@ import { asc, desc } from "drizzle-orm";
 import { playerSlotTable, playerSlotVersionTable, playersTable } from "../db/schema.js";
 import { db } from "./db.js";
 import { serverConfig } from "./env.js";
+import { logger } from "../logger.js";
 
 export const doSync = async () => {
 
@@ -16,7 +17,7 @@ export const doSync = async () => {
         .limit(1);
 
     const s = JSON.stringify(serverConfig.paceGroups);
-    console.log(s)
+    logger.debug({ paceGroups: s }, 'pace groups snapshot');
     if (lastState[0]?.val === s) {
         return
     } else {
@@ -26,7 +27,7 @@ export const doSync = async () => {
     let to_insert = [];
     for (let x of serverConfig.paceGroups) {
         for (let i = 0; i <= x.count; i += 1) {
-            console.log(`${x.name}${i}`)
+            logger.debug({ paceGroup: x.name, slotIndex: i }, 'creating slot');
             to_insert.push({ paceGroup: x.name, slotIndex: i })
         }
     }
@@ -34,7 +35,7 @@ export const doSync = async () => {
     await db.delete(playerSlotTable);
     await db.insert(playerSlotTable).values(to_insert);
 
-    console.log(`synced up!`);
+    logger.info('slot sync completed');
 
 
 };

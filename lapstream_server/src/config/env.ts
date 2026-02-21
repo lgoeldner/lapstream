@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
 import { readFileSync } from 'fs';
 import { z } from 'zod';
+import { logger } from '../logger.js';
 
 
 dotenv.config();
@@ -28,5 +29,5 @@ const serverConfigSchema = z.object({
 
 
 var p = JSON.parse(readFileSync(env.CONFIG_PATH, "ascii"));
-console.log("config loaded success");
+logger.info('config loaded successfully');
 export const serverConfig = serverConfigSchema.parse(p);
