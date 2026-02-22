@@ -1,5 +1,5 @@
 import { sql, relations } from "drizzle-orm";
-import { integer, pgTable, varchar, text, primaryKey, timestamp } from "drizzle-orm/pg-core";
+import { integer, pgTable, varchar, text, primaryKey, timestamp, pgEnum, boolean, char } from "drizzle-orm/pg-core";
 /**
  * contains all registered Users
  */
@@ -25,6 +25,16 @@ export type playerSlotRow = typeof playerSlotTable.$inferSelect
 export const playerSlotVersionTable = pgTable("player_slot_versioning", {
     id: integer().primaryKey().generatedAlwaysAsIdentity(),
     val: text().notNull(),
+})
+
+export const rolesEnum = pgEnum('device_role', ['reception', 'lane_assign', 'lane_count']);
+export const otpCodeTable = pgTable("otp_codes", {
+    otp: char({ length: 6 }).primaryKey(),
+    deviceName: text('device_name').notNull(),
+    role: rolesEnum('role').notNull(),
+    issuedAt: timestamp('issued_at').defaultNow(),
+    expiresAt: timestamp('expires_at').notNull(),
+    wasUsed: boolean('was_used').default(false)
 })
 
 export const slotTableRelations = relations(playerSlotTable, (r) => ({

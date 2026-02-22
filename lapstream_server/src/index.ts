@@ -2,13 +2,14 @@ import { buildApp } from './app.js';
 import { env } from './config/env.js';
 import { logger } from './logger.js';
 import { doSync } from './config/slotsync.js';
+import { input } from '@inquirer/prompts'
 
 const start = async (): Promise<void> => {
     // sync up the server side config with the database state
     await doSync();
 
     const app = buildApp();
-    
+
 
     const server = app.listen(env.PORT, env.HOST, () => {
         logger.info(`lapstream-server listening on http://${env.HOST}:${env.PORT}`);
@@ -32,3 +33,4 @@ start().catch((error: unknown) => {
     }
     process.exit(1);
 });
+

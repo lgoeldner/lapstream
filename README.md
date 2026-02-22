@@ -37,18 +37,6 @@ Planned platform architecture:
 - ORM: drizzle
 - Realtime communication: WebSockets
 
-Current implemented backend stack in this repo:
-
-- Runtime: Node.js (>= 22)
-- Language: TypeScript
-- API framework: Express 5
-- Validation: Zod
-- Database: PostgreSQL
-- ORM / SQL tooling: Drizzle ORM + Drizzle Kit
-- DB driver: `pg`
-- Logging: Pino + pino-http
-- Local DB orchestration: Docker Compose (`postgres:18-alpine`)
-
 ## Repository Structure
 
 - `/lapstream_server` - backend API, DB, migrations/tooling, OpenAPI specs (TODO)

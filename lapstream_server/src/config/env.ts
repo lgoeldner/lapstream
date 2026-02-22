@@ -1,7 +1,6 @@
 import dotenv from 'dotenv';
 import { readFileSync } from 'fs';
 import { z } from 'zod';
-import { logger } from '../logger.js';
 
 
 dotenv.config();
@@ -11,7 +10,8 @@ const envSchema = z.object({
   HOST: z.string().default('0.0.0.0'),
   PORT: z.coerce.number().int().positive().default(4000),
   DATABASE_URL: z.string(),
-  CONFIG_PATH: z.string()
+  CONFIG_PATH: z.string(),
+  ADMIN_API_TOKEN: z.string()
 });
 
 
@@ -29,5 +29,4 @@ const serverConfigSchema = z.object({
 
 
 var p = JSON.parse(readFileSync(env.CONFIG_PATH, "ascii"));
-logger.info('config loaded successfully');
 export const serverConfig = serverConfigSchema.parse(p);
