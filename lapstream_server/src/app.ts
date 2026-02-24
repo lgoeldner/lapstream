@@ -1,11 +1,5 @@
 import cors from 'cors';
 import express, { type Express } from 'express';
-import {
-  assignPlayerToSlotController,
-  getPlayerSlotsController,
-  registerPlayerController,
-  removePlayerFromSlotController
-} from './controllers/playerAdmin.controller.js';
 import { playerRouter } from './routes/player.routes.js';
 import { slotRouter } from './routes/slots.routes.js';
 import { httpLogger } from './middleware/httpLogger.js';

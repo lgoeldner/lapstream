@@ -3,15 +3,15 @@ import { RequestHandler } from "express";
 import { z } from 'zod';
 import { env } from "../config/env.js";
 import { logger } from "../logger.js";
-import { generateOTPs } from "../services/auth.services.js";
+import { generateOTPs, validateOTP } from "../services/auth.services.js";
 
 
 
-const otpRequestsSchema = z.array(z.object({
+const otpClaimsSchema = z.array(z.object({
     role: z.enum(['reception', 'lane_assign', 'lane_count']),
     name: z.string().optional()
 }));
-export type otpRequest = z.infer<typeof otpRequestsSchema>
+export type otpClaims = z.infer<typeof otpClaimsSchema>
 
 
 export const generateOTPsAdminController: RequestHandler = async (req, res) => {
@@ -27,15 +27,13 @@ export const generateOTPsAdminController: RequestHandler = async (req, res) => {
     const a = Buffer.from(input_token, "utf8");
     const b = Buffer.from(env.ADMIN_API_TOKEN, "utf8");
 
-    logger.info(`${a} === ${b}`)
-
     if (a.byteLength != b.byteLength || !timingSafeEqual(a, b)) {
         logger.warn('admin token wrong')
         return res.status(401).json({ status: 'failure', error: 'Admin Token mismatch' })
     }
     // authentication as admin OK
 
-    const claims = otpRequestsSchema.safeParse(req.body);
+    const claims = otpClaimsSchema.safeParse(req.body);
     if (claims.error) {
         return res.status(400).json({ status: 'failure', error: claims.error })
     }
@@ -45,3 +43,13 @@ export const generateOTPsAdminController: RequestHandler = async (req, res) => {
     return res.status(200).json(ret);
 };
 
+const enrollSchema = z.object({ otp: z.string().length(6) });
+export const enrollController: RequestHandler = async (req, res) => {
+    const parseRes = enrollSchema.safeParse(req.body);
+    if (!parseRes.success) {
+        return res.status(400).json({ status: 'failure', err: parseRes.error });
+    }
+    const s = await validateOTP(parseRes.data.otp);
+
+    return res.status((s.status == 'ok') ? 200 : 400).json(s);
+};

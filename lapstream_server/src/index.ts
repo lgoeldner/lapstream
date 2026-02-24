@@ -2,7 +2,6 @@ import { buildApp } from './app.js';
 import { env } from './config/env.js';
 import { logger } from './logger.js';
 import { doSync } from './config/slotsync.js';
-import { input } from '@inquirer/prompts'
 
 const start = async (): Promise<void> => {
     // sync up the server side config with the database state
@@ -15,8 +14,8 @@ const start = async (): Promise<void> => {
         logger.info(`lapstream-server listening on http://${env.HOST}:${env.PORT}`);
     });
 
-    const shutdown = async (): Promise<void> => {
-        server.close(async () => {
+    const shutdown = () => {
+        server.close(() => {
             process.exit(0);
         });
     };

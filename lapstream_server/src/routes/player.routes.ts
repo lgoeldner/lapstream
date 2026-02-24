@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { assignPlayerToSlotController, registerPlayerController } from "../controllers/playerAdmin.controller.js";
+import { registerPlayerController } from "../controllers/playerAdmin.controller.js";
 
 export const playerRouter = Router();
 

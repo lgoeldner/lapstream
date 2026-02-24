@@ -1,10 +1,7 @@
-import { and, eq, isNull, sql } from 'drizzle-orm';
+import { and, eq, isNull } from 'drizzle-orm';
 import { db } from '../config/db.js';
 import { assignPlayerDTO } from '../controllers/playerAdmin.controller.js';
 import { playerSlotRow, playerSlotRow as PlayerSlotRow, playerSlotTable, playersTable } from '../db/schema.js';
-import e from 'cors';
-import { fa } from 'zod/locales';
-import { unique } from 'drizzle-orm/pg-core';
 import { logger } from '../logger.js';
 
 export type NewUserInput = {
@@ -48,7 +45,7 @@ export const assignPlayerToSlot = async (player: assignPlayerDTO): Promise<Assig
         ).returning();
     // if no slot was updated, something failed
     if (updated.length !== 1) {
-        logger.warn(`player id=${player.id} could not be assigned to ${player.assign_to}`);
+        logger.warn(`player id=${player.id} could not be assigned to ${JSON.stringify(player.assign_to)}`);
         return { status: 'failure', reason: 'slot taken' };
     }
 
@@ -69,6 +66,5 @@ export const removePlayerFromSlot = async (player_id: number): Promise<removePla
 };
 
 export const getPlayerSlots = async (): Promise<typeof playerSlotTable.$inferSelect[]> => {
-    const d = await db.select().from(playerSlotTable);
-    return d;
+    return await db.select().from(playerSlotTable);
 };
