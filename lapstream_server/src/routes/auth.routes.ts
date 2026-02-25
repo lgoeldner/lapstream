@@ -4,7 +4,7 @@ import { enrollController, generateOTPsAdminController } from "../controllers/au
 
 export const authRouter = Router();
 // use generated OTP to authenticate device, returns jwt token + refresh token
-authRouter.get('/enroll', enrollController);
+authRouter.post('/enroll', enrollController);
 
 // generate OTPs with admin api key
-authRouter.get('/admin/otp', generateOTPsAdminController)
+authRouter.post('/admin/otp', generateOTPsAdminController)

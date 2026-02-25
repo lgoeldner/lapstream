@@ -3,15 +3,16 @@ import { RequestHandler } from "express";
 import { z } from 'zod';
 import { env } from "../config/env.js";
 import { logger } from "../logger.js";
-import { generateOTPs, validateOTP } from "../services/auth.services.js";
+import { enroll, generateOTPs } from "../services/auth.services.js";
 
 
 
 const otpClaimsSchema = z.array(z.object({
-    role: z.enum(['reception', 'lane_assign', 'lane_count']),
+    role: z.enum(['admin', 'reception', 'lane_assign', 'lane_count']),
     name: z.string().optional()
 }));
-export type otpClaims = z.infer<typeof otpClaimsSchema>
+export type OtpClaims = z.infer<typeof otpClaimsSchema>;
+export type Role = z.infer<typeof otpClaimsSchema.element.shape.role>;
 
 
 export const generateOTPsAdminController: RequestHandler = async (req, res) => {
@@ -22,12 +23,12 @@ export const generateOTPsAdminController: RequestHandler = async (req, res) => {
         logger.warn(`no admin token on request to gen OTPs`)
         return res.status(401).json({ status: 'failure', error: 'missing admin token' })
     }
-    // remove 'Bearer ' prefix
-    const input_token = input.replace(/Bearer\s/i, '');
-    const a = Buffer.from(input_token, "utf8");
-    const b = Buffer.from(env.ADMIN_API_TOKEN, "utf8");
+    // remove 'Bearer ' prefix and transform to 
+    const usr_input = input.replace(/Bearer\s/i, '');
+    const user_token = Buffer.from(usr_input, "utf8");
+    const api_token = env.ADMIN_API_TOKEN;
 
-    if (a.byteLength != b.byteLength || !timingSafeEqual(a, b)) {
+    if (user_token.byteLength != api_token.byteLength || !timingSafeEqual(user_token, api_token)) {
         logger.warn('admin token wrong')
         return res.status(401).json({ status: 'failure', error: 'Admin Token mismatch' })
     }
@@ -49,7 +50,7 @@ export const enrollController: RequestHandler = async (req, res) => {
     if (!parseRes.success) {
         return res.status(400).json({ status: 'failure', err: parseRes.error });
     }
-    const s = await validateOTP(parseRes.data.otp);
+    const s = await enroll(parseRes.data.otp);
 
     return res.status((s.status == 'ok') ? 200 : 400).json(s);
 };

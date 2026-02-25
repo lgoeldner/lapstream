@@ -5,7 +5,7 @@
 
 import type { RequestHandler } from 'express';
 import { z } from 'zod';
-import { assignPlayerToSlot, getPlayerSlots, registerPlayer, removePlayerFromSlot } from '../services/playerAdmin.service.js';
+import { assignPlayerToSlot, getPlayerSlots, registerPlayer as newPlayer, removePlayerFromSlot } from '../services/playerAdmin.service.js';
 import { logger } from '../logger.js';
 
 const newUserSchema = z.object({
@@ -17,10 +17,10 @@ const newUserSchema = z.object({
  * 
  * @returns status and participant id, if successful
  */
-export const registerPlayerController: RequestHandler = async (req, res) => {
+export const newPlayerController: RequestHandler = async (req, res) => {
     const p = newUserSchema.safeParse(req.body);
     if (p.success) {
-        const data = await registerPlayer(p.data);
+        const data = await newPlayer(p.data);
         return res.status(201).json({ status: 'ok', data });
     }
 

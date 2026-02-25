@@ -11,10 +11,10 @@ const envSchema = z.object({
   PORT: z.coerce.number().int().positive().default(4000),
   DATABASE_URL: z.string(),
   CONFIG_PATH: z.string(),
-  ADMIN_API_TOKEN: z.string()
+  ADMIN_API_TOKEN: z.string().transform(it => Buffer.from(it, 'utf8')),
+  JWT_SECRET: z.string().transform(it => new Uint8Array(Buffer.from(it, 'base64'))),
+  REFRESH_TOKEN_PEPPER: z.string().transform(it => Buffer.from(it, 'base64'))
 });
-
-
 
 export type AppEnv = z.infer<typeof envSchema>;
 
@@ -28,5 +28,4 @@ const serverConfigSchema = z.object({
 });
 
 
-var p = JSON.parse(readFileSync(env.CONFIG_PATH, "ascii"));
-export const serverConfig = serverConfigSchema.parse(p);
+export const serverConfig = serverConfigSchema.parse(JSON.parse(readFileSync(env.CONFIG_PATH, "ascii")));

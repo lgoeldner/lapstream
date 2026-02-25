@@ -1,5 +1,5 @@
 import { sql, relations } from "drizzle-orm";
-import { integer, pgTable, varchar, text, timestamp, pgEnum, boolean, char } from "drizzle-orm/pg-core";
+import { integer, pgTable, varchar, text, timestamp, pgEnum, char } from "drizzle-orm/pg-core";
 /**
  * contains all registered Users
  */
@@ -21,13 +21,13 @@ export const playerSlotTable = pgTable("player_slot", {
 });
 export type playerSlotRow = typeof playerSlotTable.$inferSelect
 
-
 export const playerSlotVersionTable = pgTable("player_slot_versioning", {
     id: integer().primaryKey().generatedAlwaysAsIdentity(),
     val: text().notNull(),
 })
 
-export const rolesEnum = pgEnum('device_role', ['reception', 'lane_assign', 'lane_count']);
+export const rolesEnum = pgEnum('device_role', ['reception', 'lane_assign', 'lane_count', 'admin']);
+
 export const otpCodeTable = pgTable("otp_codes", {
     otp: char({ length: 6 }).primaryKey(),
     deviceName: text('device_name').notNull(),
@@ -36,12 +36,29 @@ export const otpCodeTable = pgTable("otp_codes", {
     expiresAt: timestamp('expires_at').notNull(),
 })
 
+// each client is a device
 export const clientsTable = pgTable('clients', {
-    deviceID: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+    id: integer().primaryKey().generatedAlwaysAsIdentity(),
     deviceName: text('device_name').notNull(),
     role: rolesEnum('role').notNull(),
     registeredAt: timestamp('registered_at').notNull().defaultNow(),
 });
+
+export const refreshTokenTable = pgTable('refresh_token', {
+    id: integer().primaryKey().generatedAlwaysAsIdentity(),
+    clientId: integer("client_id").notNull(),
+    tokenHash: varchar('token_hash').notNull(),
+    issuedAt: timestamp('issued_at').notNull().defaultNow(),
+    // token is invalid after usage, revoked_at set with each usage
+    revokedAt: timestamp('revoked_at')
+});
+
+export const refreshRelations = relations(refreshTokenTable, (r) => ({
+    tokenId: r.one(clientsTable, {
+        fields: [refreshTokenTable.clientId],
+        references: [clientsTable.id]
+    })
+}));
 
 export const slotTableRelations = relations(playerSlotTable, (r) => ({
     assignedPlayer: r.one(playersTable, {
