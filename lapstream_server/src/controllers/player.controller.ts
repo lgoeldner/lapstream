@@ -5,7 +5,7 @@
 
 import type { RequestHandler } from 'express';
 import { z } from 'zod';
-import { assignPlayerToSlot, getPlayerByID as getPlayerByID, getPlayers, getPlayerSlots, registerPlayer as newPlayer, removePlayerFromSlot } from '../services/playerAdmin.service.js';
+import { getPlayerByID as getPlayerByID, getPlayers, getPlayerSlots, registerPlayer as newPlayer, removePlayerFromSlot } from '../services/playerAdmin.service.js';
 import { logger } from '../logger.js';
 
 const newUserSchema = z.object({
@@ -25,30 +25,6 @@ export const newPlayerController: RequestHandler = async (req, res) => {
     }
 
     return res.status(500).json({ status: 'failure', err: p.error });
-};
-
-
-const assignPlayerSchema = z.object({
-    id: z.int(),
-    assign_to: z.object({
-        pace_group: z.string(),
-        slot: z.int()
-    })
-});
-
-export type assignPlayerDTO = z.infer<typeof assignPlayerSchema>;
-
-export const assignPlayerToSlotController: RequestHandler = async (req, res) => {
-    const r = assignPlayerSchema.safeParse(req.body);
-    logger.debug({ parseResult: r }, 'assign player payload parsed');
-    if (!r.success)
-        return res.status(500).json({ status: "failure", err: r.error });
-    const rs = await assignPlayerToSlot(r.data);
-
-    if (rs.status === 'failure')
-        return res.status(400).json(rs);
-
-    return res.status(201).json(rs);
 };
 
 export const getPlayerController: RequestHandler = async (req, res) => {

@@ -1,10 +1,10 @@
 import { Router } from "express";
-import { enrollController, generateOTPsAdminController } from "../controllers/auth.controller.js";
+import { enrollController as enrollDeviceController, generateOTPsAdminController } from "../controllers/auth.controller.js";
 
 
 export const authRouter = Router();
 // use generated OTP to authenticate device, returns jwt token + refresh token
-authRouter.post('/enroll', enrollController);
+authRouter.post('/device', enrollDeviceController);
 
-// generate OTPs with admin api key
+// generate OTPs requiring admin api key
 authRouter.post('/admin/otp', generateOTPsAdminController)

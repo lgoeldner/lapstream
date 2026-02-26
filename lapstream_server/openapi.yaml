@@ -1,82 +1,421 @@
-openapi: 3.1.0
+openapi: 3.0.0
 info:
-  title: LapStream Server API
-  version: 0.1.0
-  description: Starter OpenAPI spec with a single newUser endpoint.
+  title: lapstream
+  version: 1.0.0
+  description: ""
 servers:
-  - url: http://localhost:4000
-    description: Local development server
+  - url: "{{BASE_URL}}"
+  - url: ""
 paths:
-  /newUser:
+  /auth/admin/otp:
     post:
-      operationId: newUser
-      summary: Create a new user
+      summary: auth/admin/otp
+      responses: {}
+      tags:
+        - auth
+      description: >-
+        ## Admin OTP — Generate / Retrieve OTP
+
+
+        Generates one-time passwords (OTP) for one or more client devices
+        identified by their role and name.
+
+
+        ---
+
+
+        ### Authentication
+
+
+        This endpoint requires an admin bearer token. Set in server .env under
+        `ADMIN_API_TOKEN`
+
+
+        ```
+
+        Authorization: Bearer {{ADMIN_TOKEN}}
+
+         ```
+
+        ---
+
+
+        ### Request Body
+
+
+        Send a **raw JSON array** of objects. Each object represents a user for
+        whom an OTP should be generated.
+
+
+        | Field | Type | Required | Description |
+
+        | --- | --- | --- | --- |
+
+        | `role` | string | ✅ | The role assigned to the user |
+
+        | `name` | string | ✅ | The display name / identifier of the user |
+
+
+        **Example:**
+
+
+        ``` json
+
+        [
+          { "role": "lane_assign", "name": "lane_assign1" },
+          { "role": "reception",   "name": "reception1"   }
+        ]
+
+         ```
+
+        ---
+
+
+        ### Supported Roles
+
+
+        | Role | Description |
+
+        | --- | --- |
+
+        | `lane_assign` | User responsible for assigning lanes |
+
+        | `reception` | User operating at the reception / front desk |
+
+
+        ---
+
+
+        ### Notes
+
+
+        - Multiple users can be included in a single request by adding more
+        objects to the array.
+            
+        - Ensure the `ADMIN_TOKEN` is valid
       requestBody:
-        required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/NewUserRequest'
+              type: array
+              items:
+                type: object
+                properties:
+                  role:
+                    type: string
+                    enum:
+                      - admin
+                      - reception
+                      - lane_assign
+                      - lane_count
+                  name:
+                    type: string
+            example:
+              - role: admin
+                name: admin1
+  /auth/device:
+    post:
+      summary: enroll new device from OTP code
       responses:
-        '201':
-          description: User created
+        "200":
+          description: created new device
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/NewUserResponse'
-        '400':
-          description: Invalid request payload
+                type: object
+                properties:
+                  status:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      deviceName:
+                        type: string
+                      role:
+                        type: string
+                        enum:
+                          - admin
+                          - reception
+                          - lane_assign
+                          - lane_count
+                      registeredAt:
+                        type: string
+                        format: date-time
+                      credentials:
+                        type: object
+                        properties:
+                          jwt:
+                            type: string
+                          refresh_token:
+                            type: string
+      tags:
+        - auth
+      description: >-
+        Enrolls a device using a one-time password (OTP) issued by the
+        [<code>admin/otp</code>](https://null) endpoint.
+
+
+        Upon successful enrollment, the device receives a **JWT access token**
+        and a **refresh token**, which are used to authenticate subsequent
+        requests.
+
+
+        ## Authentication Flow
+
+
+        1. An admin generates an OTP via `admin/otp`, specifying a role and
+        device name.
+            
+        2. The device submits the OTP to this endpoint to register itself.
+            
+        3. The response includes a **JWT** (used as a Bearer Token) and a
+        **refresh token**.
+            
+        4. When the JWT expires, use the refresh token to obtain a new one (the
+        old token is invalidated).
+            
+
+        ## Query Parameters
+
+
+        | Parameter | Type | Required | Description |
+
+        | --- | --- | --- | --- |
+
+        | `otp` | string | Yes | The one-time password generated by `admin/otp`
+        |
+
+
+        ## Response
+
+
+        | Field | Type | Description |
+
+        | --- | --- | --- |
+
+        | `status` | string | 'ok' |
+
+        | `data` | object | Contains the enrolled device information |
+
+        | `data.id` | integer | Unique device ID |
+
+        | `data.deviceName` | string | Name of the enrolled device |
+
+        | `data.role` | string (enum: `admin`, `reception`, `lane_assign`,
+        `lane_count`) | Role assigned to the device |
+
+        | `data.registeredAt` | string (date-time) | ISO 8601 timestamp of when
+        the device was registered |
+
+        | `data.credentials` | object | Authentication credentials |
+
+        | `data.credentials.jwt` | string | JWT access token for authenticating
+        requests |
+
+        | `data.credentials.refresh_token` | string | Token used to refresh the
+        JWT |
+
+
+        ### On Error:
+
+
+        | **Field** | **Type** | **Description** |
+
+        | --- | --- | --- |
+
+        | status | string | 'failure' |
+
+        | err | string | Error Description |
+
+
+        #### Possible Errors:
+
+
+        - `could not verify OTP:` invalid OTP Token, expired or reused
+            
+
+        ## Usage
+
+
+        Use the returned `data.credentials.jwt` as a Bearer Token in the
+        `Authorization` header for all subsequent requests:
+
+
+        ```
+
+        Authorization: Bearer {{ADMIN_TOKEN}}
+
+         ```
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                otp:
+                  type: string
+                  minLength: 6
+                  maxLength: 6
+            example:
+              otp: "480942"
+  /player:
+    auth:
+
+    post:
+      summary: create new player
+      responses:
+        "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-components:
-  schemas:
-    NewUserRequest:
-      type: object
-      additionalProperties: false
-      required:
-        - email
-        - firstName
-        - lastName
-      properties:
-        email:
-          type: string
-          format: email
-        firstName:
-          type: string
-          minLength: 1
-        lastName:
-          type: string
-          minLength: 1
-    NewUserResponse:
-      type: object
-      additionalProperties: false
-      required:
-        - id
-        - email
-        - firstName
-        - lastName
-        - createdAt
-      properties:
-        id:
-          type: string
-          format: uuid
-        email:
-          type: string
-          format: email
-        firstName:
-          type: string
-        lastName:
-          type: string
-        createdAt:
-          type: string
-          format: date-time
-    ErrorResponse:
-      type: object
-      additionalProperties: false
-      required:
-        - message
-      properties:
-        message:
-          type: string
+                type: object
+                properties:
+                  status:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      name:
+                        type: string
+                      age:
+                        type: integer
+              example:
+                status: ok
+                data:
+                  id: 1
+                  name: lini
+                  age: 30
+    get:
+      summary: get all players
+      responses:
+        "200":
+          description: list of all players
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        name:
+                          type: string
+                        age:
+                          type: integer
+  /player/{id}:
+    delete:
+      summary: delete by id
+      responses:
+        "200":
+          description: player deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      name:
+                        type: string
+                      age:
+                        type: integer
+              example:
+                status: ok
+                data:
+                  id: 1
+                  name: lgoeldner
+                  age: 99
+      tags:
+        - player
+      description: |-
+        Delete a Player by ID
+
+        ## Params
+
+        `/player/:id: required`
+
+        Which player to delete
+
+        ## Required Role
+
+        `'reception'`
+
+        ## Response:
+    get:
+      summary: get by id
+      responses:
+        "200":
+          description: player found by id
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      name:
+                        type: string
+                      age:
+                        type: integer
+  /lane/{paceGroup}/{position}/player:
+    put:
+      summary: assign player to lane
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                player_id:
+                  type: integer
+      responses:
+        "200":
+          description: player assigned to lane
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      paceGroup:
+                        type: string
+                      slotIndex:
+                        type: integer
+                      assignedPlayer:
+                        nullable: true
+                        type: integer
+              example:
+                status: ok
+                data:
+                  id: 1
+                  paceGroup: A
+                  slotIndex: 1
+                  assignedPlayer: 42
+      tags:
+        - lane

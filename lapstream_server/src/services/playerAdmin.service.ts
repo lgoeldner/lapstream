@@ -1,8 +1,6 @@
-import { and, eq, isNull } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { db } from '../config/db.js';
-import { assignPlayerDTO } from '../controllers/playerAdmin.controller.js';
-import { playerSlotRow, playerSlotRow as PlayerSlotRow, playerSlotTable, playersTable } from '../db/schema.js';
-import { logger } from '../logger.js';
+import { playerSlotRow, playerSlotTable, playersTable } from '../db/schema.js';
 
 export type NewUserInput = {
     name: string;
@@ -22,37 +20,8 @@ export const registerPlayer = async (input: NewUserInput): Promise<typeof player
     return result[0] ?? 'failure';
 };
 
-type AssignPlayerResult = { status: 'ok', data: PlayerSlotRow }
-    | { status: 'failure', reason: 'player already assigned' | "slot doesn't exist" | 'slot taken' };
-export const assignPlayerToSlot = async (player: assignPlayerDTO): Promise<AssignPlayerResult> => {
-    // todo: check for player already assigned
-    const playerIsAlreadyAssigned = await db.query.playerSlotTable
-        .findFirst({ where: eq(playerSlotTable.assignedPlayer, player.id) });
 
-    if (playerIsAlreadyAssigned) {
-        return { status: 'failure', reason: 'player already assigned' };
-    }
-
-    // todo: check if the slot exists and was empty
-    const updated = await db.update(playerSlotTable)
-        .set({ assignedPlayer: player.id })
-        .where(
-            and(
-                isNull(playerSlotTable.assignedPlayer),
-                eq(playerSlotTable.paceGroup, player.assign_to.pace_group),
-                eq(playerSlotTable.slotIndex, player.assign_to.slot)
-            )
-        ).returning();
-    // if no slot was updated, something failed
-    if (updated.length !== 1) {
-        logger.warn(`player id=${player.id} could not be assigned to ${JSON.stringify(player.assign_to)}`);
-        return { status: 'failure', reason: 'slot taken' };
-    }
-
-    return { status: 'ok', data: updated[0]! };
-};
-
-type removePlayerResult = { status: 'ok', data: playerSlotRow } | { status: 'failure' };
+type removePlayerResult = { status: 'ok', data: playerSlotRow } | { status: 'failure', err: string };
 
 export const removePlayerFromSlot = async (player_id: number): Promise<removePlayerResult> => {
     const ret = await db.update(playerSlotTable)
@@ -62,7 +31,7 @@ export const removePlayerFromSlot = async (player_id: number): Promise<removePla
 
     // send 'player_left' event to 'lap_counter' type clients
 
-    return (ret[0]) ? { status: 'ok', data: ret[0] } : { status: 'failure' };
+    return (ret[0]) ? { status: 'ok', data: ret[0] } : { status: 'failure', err: `${player_id} is not assigned to a lane` };
 };
 
 export const getPlayerSlots = async (): Promise<typeof playerSlotTable.$inferSelect[]> => {

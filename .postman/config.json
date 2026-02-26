@@ -1,0 +1,15 @@
+{
+  "workspace": {
+    "id": "eb753684-387f-4744-8723-ca36f477edf9"
+  },
+  "entities": {
+    "environments": [],
+    "flows": [],
+    "globals": [],
+    "mocks": [],
+    "specs": [
+      "../lapstream_server/openapi.yaml"
+    ],
+    "collections": []
+  }
+}
