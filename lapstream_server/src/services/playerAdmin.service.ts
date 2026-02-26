@@ -66,5 +66,14 @@ export const removePlayerFromSlot = async (player_id: number): Promise<removePla
 };
 
 export const getPlayerSlots = async (): Promise<typeof playerSlotTable.$inferSelect[]> => {
-    return await db.select().from(playerSlotTable);
+    return db.select().from(playerSlotTable);
 };
+
+export const getPlayerByID = async (player_id: number): Promise<typeof playersTable.$inferSelect | null> => {
+    return db.select()
+        .from(playersTable)
+        .where(eq(playersTable.id, player_id))
+        .then(it => it[0] ?? null);
+};
+
+export const getPlayers = async (): Promise<typeof playersTable.$inferSelect[]> => db.select().from(playersTable);

@@ -14,24 +14,32 @@ const otpClaimsSchema = z.array(z.object({
 export type OtpClaims = z.infer<typeof otpClaimsSchema>;
 export type Role = z.infer<typeof otpClaimsSchema.element.shape.role>;
 
-
-export const generateOTPsAdminController: RequestHandler = async (req, res) => {
-    // authenticate admin via admin api token
-    const input = req.headers.authorization;
-
-    if (!input) {
+const authenticateSuperUser = (auth_header: string | undefined): { status: 'ok' } | { status: 'failure', err: string } => {
+    if (!auth_header) {
         logger.warn(`no admin token on request to gen OTPs`)
-        return res.status(401).json({ status: 'failure', error: 'missing admin token' })
+        return { status: 'failure', err: 'missing admin token' };
     }
     // remove 'Bearer ' prefix and transform to 
-    const usr_input = input.replace(/Bearer\s/i, '');
+    const usr_input = auth_header.replace(/Bearer\s/i, '');
     const user_token = Buffer.from(usr_input, "utf8");
     const api_token = env.ADMIN_API_TOKEN;
 
     if (user_token.byteLength != api_token.byteLength || !timingSafeEqual(user_token, api_token)) {
         logger.warn('admin token wrong')
-        return res.status(401).json({ status: 'failure', error: 'Admin Token mismatch' })
+        return { status: 'failure', err: 'Admin Token mismatch' };
     }
+
+    return { status: 'ok' };
+};
+
+export const generateOTPsAdminController: RequestHandler = async (req, res) => {
+    // authenticate admin via admin api token
+    const input = req.headers.authorization;
+    const isAuthorized = authenticateSuperUser(input);
+    if (isAuthorized.status === 'failure') {
+        return res.status(401).json(isAuthorized.err);
+    }
+
     // authentication as admin OK
 
     const claims = otpClaimsSchema.safeParse(req.body);

@@ -5,7 +5,7 @@
 
 import type { RequestHandler } from 'express';
 import { z } from 'zod';
-import { assignPlayerToSlot, getPlayerSlots, registerPlayer as newPlayer, removePlayerFromSlot } from '../services/playerAdmin.service.js';
+import { assignPlayerToSlot, getPlayerByID as getPlayerByID, getPlayers, getPlayerSlots, registerPlayer as newPlayer, removePlayerFromSlot } from '../services/playerAdmin.service.js';
 import { logger } from '../logger.js';
 
 const newUserSchema = z.object({
@@ -51,11 +51,24 @@ export const assignPlayerToSlotController: RequestHandler = async (req, res) => 
     return res.status(201).json(rs);
 };
 
+export const getPlayerController: RequestHandler = async (req, res) => {
+    if (req.params.id) {
+        const player_id = parseInt(req.params.id as string);
+        if (!player_id) {
+            return res.status(400).json({ status: 'failure', err: 'failed to parse id: must be a number!' });
+        }
+
+        return res.status(200).json({ status: 'ok', data: await getPlayerByID(player_id) });
+    }
+
+    return res.status(200).json({ status: 'ok', data: await getPlayers() });
+};
+
 export const removePlayerFromSlotController: RequestHandler = async (req, res) => {
     const player_id = parseInt(req.params.id as string);
 
     if (!player_id)
-        return { status: 'failure', err: 'missing player ID' };
+        return res.status(400).json({ status: 'failure', err: 'missing player ID' });
 
     const ret = await removePlayerFromSlot(player_id);
 

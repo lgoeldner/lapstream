@@ -1,0 +1,17 @@
+{
+  "$schema": "https://cdn.scalar.com/schema/scalar-config-next.json",
+  "scalar": "2.0.0",
+  "info": {
+    "title": "My Documentation",
+    "description": "The best documentation you've read today"
+  },
+  "navigation": {
+    "routes": {
+      "/": {
+        "title": "Introduction",
+        "type": "page",
+        "filepath": "docs/introduction.md"
+      }
+    }
+  }
+}
