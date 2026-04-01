@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { env } from "../config/env.js";
 import { logger } from "../logger.js";
 import { enroll, generateOTPs } from "../services/auth.services.js";
+import { refreshToken } from "../services/auth.services.js";
 
 
 
@@ -61,4 +62,19 @@ export const enrollController: RequestHandler = async (req, res) => {
     const s = await enroll(parseRes.data.otp);
 
     return res.status((s.status == 'ok') ? 200 : 400).json(s);
+};
+
+const refreshSchema = z.object({
+    refresh_token: z.string().min(10)
+});
+
+export const refreshController: RequestHandler = async (req, res) => {
+    const parseRes = refreshSchema.safeParse(req.body);
+    if (!parseRes.success) {
+        return res.status(400).json({ status: 'failure', err: 'invalid request format' });
+    }
+
+    const result = await refreshToken(parseRes.data.refresh_token);
+
+    return res.status((result.status === 'ok') ? 200 : 401).json(result);
 };

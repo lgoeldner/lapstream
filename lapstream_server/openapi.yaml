@@ -1,99 +1,97 @@
 openapi: 3.0.0
 info:
-  title: lapstream
+  title: LapStream API
   version: 1.0.0
-  description: ""
+  description: API for managing swimming competitions with player registration, lane assignment, and device authentication
 servers:
   - url: "{{BASE_URL}}"
-  - url: ""
+    description: Production server
+  - url: "http://localhost:3000"
+    description: Development server
 paths:
+  /:
+    get:
+      summary: Service information
+      description: Returns basic service information and health status
+      tags:
+        - health
+      responses:
+        "200":
+          description: Service is running
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  service:
+                    type: string
+                    example: "lapstream-server"
+                  ok:
+                    type: boolean
+                    example: true
+  /health:
+    get:
+      summary: Health check
+      description: Returns service health status
+      tags:
+        - health
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+  /health/db:
+    get:
+      summary: Database health check
+      description: Returns database connection status
+      tags:
+        - health
+      responses:
+        "200":
+          description: Database connection is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+                  db:
+                    type: string
+                    example: "connected"
   /auth/admin/otp:
     post:
-      summary: auth/admin/otp
-      responses: {}
-      tags:
-        - auth
+      summary: Generate OTPs for device enrollment
       description: >-
-        ## Admin OTP — Generate / Retrieve OTP
-
-
         Generates one-time passwords (OTP) for one or more client devices
         identified by their role and name.
 
 
-        ---
-
-
-        ### Authentication
-
-
-        This endpoint requires an admin bearer token. Set in server .env under
+        **Authentication**: Requires an admin bearer token. Set in server .env under
         `ADMIN_API_TOKEN`
 
 
+        **Headers**:
+        ```
+        Authorization: Bearer {{ADMIN_TOKEN}}
         ```
 
-        Authorization: Bearer {{ADMIN_TOKEN}}
 
-         ```
-
-        ---
-
-
-        ### Request Body
-
-
-        Send a **raw JSON array** of objects. Each object represents a user for
-        whom an OTP should be generated.
-
-
-        | Field | Type | Required | Description |
-
-        | --- | --- | --- | --- |
-
-        | `role` | string | ✅ | The role assigned to the user |
-
-        | `name` | string | ✅ | The display name / identifier of the user |
-
-
-        **Example:**
-
-
-        ``` json
-
-        [
-          { "role": "lane_assign", "name": "lane_assign1" },
-          { "role": "reception",   "name": "reception1"   }
-        ]
-
-         ```
-
-        ---
-
-
-        ### Supported Roles
-
-
-        | Role | Description |
-
-        | --- | --- |
-
-        | `lane_assign` | User responsible for assigning lanes |
-
-        | `reception` | User operating at the reception / front desk |
-
-
-        ---
-
-
-        ### Notes
-
-
-        - Multiple users can be included in a single request by adding more
+        **Note**: Multiple users can be included in a single request by adding more
         objects to the array.
-            
-        - Ensure the `ADMIN_TOKEN` is valid
+      tags:
+        - auth
+      security:
+        - adminToken: []
       requestBody:
+        required: true
         content:
           application/json:
             schema:
@@ -103,22 +101,22 @@ paths:
                 properties:
                   role:
                     type: string
-                    enum:
-                      - admin
-                      - reception
-                      - lane_assign
-                      - lane_count
+                    enum: [admin, reception, lane_assign, lane_count]
+                    description: The role assigned to the user
                   name:
                     type: string
-            example:
-              - role: admin
-                name: admin1
-  /auth/device:
-    post:
-      summary: enroll new device from OTP code
+                    description: The display name / identifier of the user
+            examples:
+              multi-device:
+                summary: Generate OTPs for multiple devices
+                value:
+                  - role: lane_assign
+                    name: lane_assign1
+                  - role: reception
+                    name: reception1
       responses:
         "200":
-          description: created new device
+          description: OTPs generated successfully
           content:
             application/json:
               schema:
@@ -126,35 +124,35 @@ paths:
                 properties:
                   status:
                     type: string
+                    enum: [ok]
                   data:
-                    type: object
-                    properties:
-                      id:
-                        type: integer
-                      deviceName:
-                        type: string
-                      role:
-                        type: string
-                        enum:
-                          - admin
-                          - reception
-                          - lane_assign
-                          - lane_count
-                      registeredAt:
-                        type: string
-                        format: date-time
-                      credentials:
-                        type: object
-                        properties:
-                          jwt:
-                            type: string
-                          refresh_token:
-                            type: string
-      tags:
-        - auth
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        role:
+                          type: string
+                        name:
+                          type: string
+                        otp:
+                          type: string
+                          description: 6-digit OTP code
+                          example: "480942"
+              example:
+                status: ok
+                data:
+                  - role: lane_assign
+                    name: lane_assign1
+                    otp: "480942"
+                  - role: reception
+                    name: reception1
+                    otp: "123456"
+  /auth/device:
+    post:
+      summary: Enroll device using OTP
       description: >-
         Enrolls a device using a one-time password (OTP) issued by the
-        [<code>admin/otp</code>](https://null) endpoint.
+        `admin/otp` endpoint.
 
 
         Upon successful enrollment, the device receives a **JWT access token**
@@ -167,88 +165,64 @@ paths:
 
         1. An admin generates an OTP via `admin/otp`, specifying a role and
         device name.
-            
-        2. The device submits the OTP to this endpoint to register itself.
-            
+
+
+        2. The device submits the OTP to this endpoint to enroll itself.
+
+
         3. The response includes a **JWT** (used as a Bearer Token) and a
         **refresh token**.
-            
+
+
         4. When the JWT expires, use the refresh token to obtain a new one (the
         old token is invalidated).
-            
-
-        ## Query Parameters
 
 
-        | Parameter | Type | Required | Description |
+        ## Request Body
+
+
+        | Field | Type | Required | Description |
+
 
         | --- | --- | --- | --- |
 
-        | `otp` | string | Yes | The one-time password generated by `admin/otp`
-        |
+
+        | `otp` | string | Yes | The one-time password generated by
+        `admin/otp` |
 
 
         ## Response
 
 
-        | Field | Type | Description |
-
-        | --- | --- | --- |
-
-        | `status` | string | 'ok' |
-
-        | `data` | object | Contains the enrolled device information |
-
-        | `data.id` | integer | Unique device ID |
-
-        | `data.deviceName` | string | Name of the enrolled device |
-
-        | `data.role` | string (enum: `admin`, `reception`, `lane_assign`,
-        `lane_count`) | Role assigned to the device |
-
-        | `data.registeredAt` | string (date-time) | ISO 8601 timestamp of when
-        the device was registered |
-
-        | `data.credentials` | object | Authentication credentials |
-
-        | `data.credentials.jwt` | string | JWT access token for authenticating
-        requests |
-
-        | `data.credentials.refresh_token` | string | Token used to refresh the
-        JWT |
+        **Success (200)**:
 
 
-        ### On Error:
+        ```json
+        {
+          "status": "ok",
+          "data": {
+            "id": 1,
+            "deviceName": "lane_assign1",
+            "role": "lane_assign",
+            "registeredAt": "2026-03-16T10:00:00Z",
+            "credentials": {
+              "jwt": "eyJhbGc...",
+              "refresh_token": "refresh_token_..."
+            }
+          }
+        }
+        ```
 
-
-        | **Field** | **Type** | **Description** |
-
-        | --- | --- | --- |
-
-        | status | string | 'failure' |
-
-        | err | string | Error Description |
-
-
-        #### Possible Errors:
-
-
-        - `could not verify OTP:` invalid OTP Token, expired or reused
-            
 
         ## Usage
 
 
         Use the returned `data.credentials.jwt` as a Bearer Token in the
-        `Authorization` header for all subsequent requests:
-
-
-        ```
-
-        Authorization: Bearer {{ADMIN_TOKEN}}
-
-         ```
+        `Authorization` header for all subsequent requests.
+      tags:
+        - auth
       requestBody:
+        required: true
         content:
           application/json:
             schema:
@@ -258,15 +232,14 @@ paths:
                   type: string
                   minLength: 6
                   maxLength: 6
-            example:
-              otp: "480942"
-  /player:
-    auth:
-
-    post:
-      summary: create new player
+            examples:
+              enroll-device:
+                summary: Enroll device with OTP
+                value:
+                  otp: "480942"
       responses:
         "200":
+          description: Device enrolled successfully
           content:
             application/json:
               schema:
@@ -274,26 +247,35 @@ paths:
                 properties:
                   status:
                     type: string
+                    enum: [ok]
                   data:
                     type: object
                     properties:
                       id:
                         type: integer
-                      name:
+                        description: Unique device ID
+                      deviceName:
                         type: string
-                      age:
-                        type: integer
-              example:
-                status: ok
-                data:
-                  id: 1
-                  name: lini
-                  age: 30
-    get:
-      summary: get all players
-      responses:
-        "200":
-          description: list of all players
+                        description: Name of the enrolled device
+                      role:
+                        type: string
+                        enum: [admin, reception, lane_assign, lane_count]
+                        description: Role assigned to the device
+                      registeredAt:
+                        type: string
+                        format: date-time
+                        description: ISO 8601 timestamp of registration
+                      credentials:
+                        type: object
+                        properties:
+                          jwt:
+                            type: string
+                            description: JWT access token for authenticating requests
+                          refresh_token:
+                            type: string
+                            description: Token used to refresh the JWT
+        "400":
+          description: Invalid OTP or enrollment failed
           content:
             application/json:
               schema:
@@ -301,6 +283,111 @@ paths:
                 properties:
                   status:
                     type: string
+                    enum: [failure]
+                  err:
+                    type: string
+                    description: Error description
+              example:
+                status: failure
+                err: "could not verify OTP: invalid OTP Token, expired or reused"
+  /player:
+    post:
+      summary: Create a new player
+      description: >-
+        Register a new swimmer/participant in the system.
+
+
+        **Required Role**: `reception`
+      tags:
+        - players
+      security:
+        - bearerAuth: [reception]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: Player's name
+                age:
+                  type: integer
+                  description: Player's age
+              required:
+                - name
+                - age
+            examples:
+              create-player:
+                summary: Create new player
+                value:
+                  name: "John Doe"
+                  age: 25
+      responses:
+        "201":
+          description: Player created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [ok]
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        description: Unique player ID
+                      name:
+                        type: string
+                        description: Player's name
+                      age:
+                        type: integer
+                        description: Player's age
+              example:
+                status: ok
+                data:
+                  id: 1
+                  name: "John Doe"
+                  age: 25
+        "400":
+          description: Invalid input data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [failure]
+                  err:
+                    type: string
+                    description: Validation error details
+    get:
+      summary: Get all players
+      description: >-
+        Retrieve a list of all registered players.
+
+
+        **Required Role**: `reception`
+      tags:
+        - players
+      security:
+        - bearerAuth: [reception]
+      responses:
+        "200":
+          description: List of all players
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [ok]
                   data:
                     type: array
                     items:
@@ -312,12 +399,37 @@ paths:
                           type: string
                         age:
                           type: integer
+              example:
+                status: ok
+                data:
+                  - id: 1
+                    name: "John Doe"
+                    age: 25
+                  - id: 2
+                    name: "Jane Smith"
+                    age: 23
   /player/{id}:
-    delete:
-      summary: delete by id
+    get:
+      summary: Get player by ID
+      description: >-
+        Retrieve a specific player by their ID.
+
+
+        **Required Role**: `reception`
+      tags:
+        - players
+      security:
+        - bearerAuth: [reception]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Player ID
+          schema:
+            type: integer
       responses:
         "200":
-          description: player deleted
+          description: Player found
           content:
             application/json:
               schema:
@@ -325,6 +437,7 @@ paths:
                 properties:
                   status:
                     type: string
+                    enum: [ok]
                   data:
                     type: object
                     properties:
@@ -338,29 +451,10 @@ paths:
                 status: ok
                 data:
                   id: 1
-                  name: lgoeldner
-                  age: 99
-      tags:
-        - player
-      description: |-
-        Delete a Player by ID
-
-        ## Params
-
-        `/player/:id: required`
-
-        Which player to delete
-
-        ## Required Role
-
-        `'reception'`
-
-        ## Response:
-    get:
-      summary: get by id
-      responses:
-        "200":
-          description: player found by id
+                  name: "John Doe"
+                  age: 25
+        "400":
+          description: Invalid player ID
           content:
             application/json:
               schema:
@@ -368,19 +462,106 @@ paths:
                 properties:
                   status:
                     type: string
+                    enum: [failure]
+                  err:
+                    type: string
+              example:
+                status: failure
+                err: "failed to parse id: must be a number!"
+  /player/lane/{id}:
+    delete:
+      summary: Remove player from lane
+      description: >-
+        Remove/unassign a player from their assigned lane slot.
+
+
+        **Required Role**: `reception`
+      tags:
+        - players
+      security:
+        - bearerAuth: [reception]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Player ID to remove from lane
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Player removed from lane successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [ok]
                   data:
                     type: object
                     properties:
                       id:
                         type: integer
-                      name:
+                      pace_group:
                         type: string
-                      age:
+                      slot_index:
                         type: integer
+                      assigned_player:
+                        type: integer
+                        nullable: true
+              example:
+                status: ok
+                data:
+                  id: 15
+                  pace_group: "A"
+                  slot_index: 3
+                  assigned_player: null
+        "400":
+          description: Player not assigned to any lane
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [failure]
+                  err:
+                    type: string
+              example:
+                status: failure
+                err: "42 is not assigned to a lane"
   /lane/{paceGroup}/{position}/player:
     put:
-      summary: assign player to lane
+      summary: Assign player to lane
+      description: >-
+        Assign a player to a specific lane slot.
+
+
+        The lane slot must be empty (not already assigned) and the player must not be assigned to another slot.
+
+
+        **Required Role**: `lane_assign`
+      tags:
+        - lanes
+      security:
+        - bearerAuth: [lane_assign]
+      parameters:
+        - name: paceGroup
+          in: path
+          required: true
+          description: Pace group identifier (e.g., "A", "B", "C")
+          schema:
+            type: string
+        - name: position
+          in: path
+          required: true
+          description: Lane position number
+          schema:
+            type: integer
       requestBody:
+        required: true
         content:
           application/json:
             schema:
@@ -388,9 +569,15 @@ paths:
               properties:
                 player_id:
                   type: integer
+                  description: Player ID to assign to this lane slot
+            examples:
+              assign-player:
+                summary: Assign player to lane
+                value:
+                  player_id: 42
       responses:
         "200":
-          description: player assigned to lane
+          description: Player assigned to lane successfully
           content:
             application/json:
               schema:
@@ -398,24 +585,72 @@ paths:
                 properties:
                   status:
                     type: string
+                    enum: [ok]
                   data:
                     type: object
                     properties:
                       id:
                         type: integer
-                      paceGroup:
+                        description: Slot ID
+                      pace_group:
                         type: string
-                      slotIndex:
+                        description: Pace group identifier
+                      slot_index:
                         type: integer
-                      assignedPlayer:
+                        description: Lane position
+                      assigned_player:
+                        type: integer
+                        description: Assigned player ID
                         nullable: true
-                        type: integer
               example:
                 status: ok
                 data:
                   id: 1
-                  paceGroup: A
-                  slotIndex: 1
-                  assignedPlayer: 42
-      tags:
-        - lane
+                  pace_group: "A"
+                  slot_index: 1
+                  assigned_player: 42
+        "400":
+          description: Assignment failed (slot taken or player already assigned)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [failure]
+                  err:
+                    type: string
+              examples:
+                slot-taken:
+                  summary: Slot already taken
+                  value:
+                    status: failure
+                    err: "slot taken"
+                already-assigned:
+                  summary: Player already assigned to another lane
+                  value:
+                    status: failure
+                    err: "player already assigned"
+components:
+  securitySchemes:
+    adminToken:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: Admin API token for OTP generation (set in .env)
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT access token obtained via device enrollment
+security: []
+tags:
+  - name: health
+    description: Service health and monitoring endpoints
+  - name: auth
+    description: Device authentication and enrollment
+  - name: players
+    description: Player management (registration, retrieval, assignment)
+  - name: lanes
+    description: Lane assignment and management

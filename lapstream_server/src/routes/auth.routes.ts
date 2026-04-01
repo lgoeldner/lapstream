@@ -1,5 +1,9 @@
 import { Router } from "express";
-import { enrollController as enrollDeviceController, generateOTPsAdminController } from "../controllers/auth.controller.js";
+import {
+  enrollController as enrollDeviceController,
+  generateOTPsAdminController,
+  refreshController
+} from "../controllers/auth.controller.js";
 
 
 export const authRouter = Router();
@@ -8,3 +12,6 @@ authRouter.post('/device', enrollDeviceController);
 
 // generate OTPs requiring admin api key
 authRouter.post('/admin/otp', generateOTPsAdminController)
+
+// refresh JWT using refresh token (rotates tokens)
+authRouter.post('/refresh', refreshController)
