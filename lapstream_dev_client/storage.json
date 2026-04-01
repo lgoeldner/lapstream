@@ -4,8 +4,8 @@
       "deviceName": "Reception",
       "role": "reception",
       "credentials": {
-        "jwt": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoicmVjZXB0aW9uIiwiaWF0IjoxNzc0MTMyNDc1LCJleHAiOjYzNSwic3ViIjoiMjciLCJhdWQiOiJsYXBzdHJlYW0tYXBpIn0.1_JK88hqMNJT_5TxNqFS3L-yZ3x_ARNsJTGRIyJnlYQ",
-        "refresh_token": "a83gNJls65IU4khTgcjNxYBTr1dUdfaauKuwvGRy3Wufj3hO8ogtNvjkeNTRjRDi/TXAMxVj4D6NG5RfkvUypA=="
+        "jwt": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoicmVjZXB0aW9uIiwiaWF0IjoxNzc1MDY4ODQwLCJleHAiOjE3NzUwNjk0NDAsInN1YiI6IjMwIiwiYXVkIjoibGFwc3RyZWFtLWFwaSJ9.vkrRARk1c8Gx_wF6gvghQ4_4qL8CDO2UknAL_npLJug",
+        "refresh_token": "FdNN5isPJhKQSiWVTeQSlYh2rPjfs/1LL8l+APmnJhhdx3BXcq54zwbDHe517u6zoj/UFHT7R7FvfCFNI5qnog=="
       }
     }
   ],

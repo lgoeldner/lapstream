@@ -16,9 +16,9 @@ export const reqRole = (...required: Role[]): RequestHandler => async (req, res,
     }
 
     // verify the JWT
+    let verified;
     try {
-        // eslint-disable-next-line no-var
-        var verified = await jose.jwtVerify(jwt, env.JWT_SECRET);
+        verified = await jose.jwtVerify(jwt, env.JWT_SECRET);
     } catch (e) {
         if (e instanceof Error) {
             return res.status(403).json({
@@ -35,7 +35,8 @@ export const reqRole = (...required: Role[]): RequestHandler => async (req, res,
 
 
     // check for expiry date
-    if (!verified.payload.exp || verified.payload.exp <= new Date().getSeconds()) {
+    const nowInSeconds = Math.floor(Date.now() / 1000);
+    if (!verified.payload.exp || verified.payload.exp <= nowInSeconds) {
         logger.warn(
             `device with expired JWT Token  tried to access api with requirement='${JSON.stringify(required)}' token=${JSON.stringify(verified.payload)}`
         );

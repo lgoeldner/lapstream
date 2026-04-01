@@ -133,11 +133,14 @@ const generateCredentials = async (client: ClientData): Promise<{ jwt: string, r
 const generateRefreshToken = () => randomBytes(64).toString('base64');
 
 const JWT_ALG = 'HS256';
+const JWT_EXPIRY_SECONDS = 10 * 60;
 const generateJWT = (client: ClientData): Promise<string> => {
+    const nowInSeconds = Math.floor(Date.now() / 1000);
+
     return new SignJWT({ role: client.role })
         .setProtectedHeader({ alg: JWT_ALG })
-        .setIssuedAt()
-        .setExpirationTime(new Date().getSeconds() + 10 * 60)
+        .setIssuedAt(nowInSeconds)
+        .setExpirationTime(nowInSeconds + JWT_EXPIRY_SECONDS)
         .setSubject(client.id.toString())
         .setAudience("lapstream-api")
         .sign(env.JWT_SECRET);
