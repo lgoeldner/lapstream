@@ -12,8 +12,8 @@
       "deviceName": "Admin",
       "role": "admin",
       "credentials": {
-        "jwt": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3NzUwNjk2NDgsImV4cCI6MTc3NTA3MDI0OCwic3ViIjoiMzEiLCJhdWQiOiJsYXBzdHJlYW0tYXBpIn0.ma6AH46bCKf6kEDMeKRFAYsIMvlj5w9GPHIA0v_1Heg",
-        "refresh_token": "mBypQxDHX+IoPs0Gg472kWRQ+bzcpS5BxlV6iFJmuzT9LmRyHWpWOo2qeKUmW3zK5K7rYeVvLpJo+egqc8gq7Q=="
+        "jwt": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3NzYyNDMyNDcsImV4cCI6MTc3NjI0Mzg0Nywic3ViIjoiMzEiLCJhdWQiOiJsYXBzdHJlYW0tYXBpIn0.bcKZ-wNsu_TMY8cX3_tFENQJNffiiQRgtUOaV4zpHag",
+        "refresh_token": "EflytYw+n98PKbWiLkQQZR1uvqBzMyI8M5UZVuX893Je6blIWcBE9CaCUMKdQdLStB/LvUPaqTxJz2UgtqnCgw=="
       }
     }
   ],

@@ -2,6 +2,7 @@ import { and, eq, isNull } from "drizzle-orm";
 import { db } from "../config/db.js";
 import { playerSlotTable } from "../db/schema.js";
 import { logger } from "../logger.js";
+import { serverConfig } from "../config/env.js";
 
 type PlayerSlotRow = typeof playerSlotTable.$inferSelect;
 
@@ -9,6 +10,12 @@ type PlayerSlotRow = typeof playerSlotTable.$inferSelect;
 
 type AssignPlayerResult = { status: 'ok', data: PlayerSlotRow }
     | { status: 'failure', err: string };
+
+/**
+ * Return a list of all valid pace groups including their capacity
+ */
+export const getPaceGroups = (): { name: string, count: number }[] => serverConfig.paceGroups
+
 
 /**
  * Assign a player to a lane slot, if the slot is not already taken and the player is not already assigned to another slot

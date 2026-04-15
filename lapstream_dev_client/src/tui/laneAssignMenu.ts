@@ -54,10 +54,15 @@ async function assignPlayerFlow(lanesApi: LanesApi, playersApi: PlayersApi): Pro
       return;
     }
 
+    const c = await lanesApi.getPaceGroups();
+    if (c.status !== 'ok' || !c.data) return console.log(chalk.red(`\n✗ Failed to fetch pace groups: ${c.err || 'Unknown error'}`));
+
+
+
     const choices = [
-      ...['A', 'B', 'C'].map(group => ({
-        name: `Group ${group}`,
-        value: group
+      ...c.data.map(gr => ({
+        name: `Group ${gr.name} (${gr.count} lanes)`,
+        value: { name: gr.name, count: gr.count }
       })),
       { name: chalk.yellow('Cancel'), value: 'cancel' }
     ];
@@ -72,12 +77,12 @@ async function assignPlayerFlow(lanesApi: LanesApi, playersApi: PlayersApi): Pro
       {
         type: 'number',
         name: 'position',
-        message: 'Lane position (1-8, 0 to cancel):',
+        message: (ans) => `Lane position index (0..${ans.paceGroup?.count - 1}; -1 to cancel):`,
         when: (ans) => ans.paceGroup !== 'cancel',
-        validate: (input: number) => {
-          if (input === 0) return true;
-          if (!input || input < 1 || input > 8) {
-            return 'Position must be between 1 and 8';
+        validate: (input: number, ans: { paceGroup: { count: number } }) => {
+          if (input === -1) return true;
+          if (!input || input < 0 || input > ans.paceGroup.count - 1) {
+            return `Position must be between 0 and ${ans.paceGroup.count - 1}`;
           }
           return true;
         }
@@ -97,12 +102,12 @@ async function assignPlayerFlow(lanesApi: LanesApi, playersApi: PlayersApi): Pro
       }
     ]);
 
-    if (answers.paceGroup === 'cancel' || answers.position === 0 || answers.playerId === 'cancel') {
+    if (answers.paceGroup === 'cancel' || answers.position === -1 || answers.playerId === 'cancel') {
       console.log(chalk.yellow('\nOperation cancelled.'));
       return;
     }
-
-    const result = await lanesApi.assignPlayer(answers.paceGroup, answers.position, answers.playerId);
+    console.log(chalk.gray(`Assigning player ID ${answers.playerId} to lane ${answers.paceGroup.name}${answers.position}...`));
+    const result = await lanesApi.assignPlayer(answers.paceGroup.name, answers.position, answers.playerId);
 
     if (result.status === 'ok' && result.data) {
       console.log(chalk.green('\n✓ Player assigned to lane successfully!'));

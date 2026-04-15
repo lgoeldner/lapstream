@@ -4,8 +4,8 @@
  * comparing after each server start and repopulating on a config change
  */
 
-import { asc, desc } from "drizzle-orm";
-import { playerSlotTable, playerSlotVersionTable, playersTable } from "../db/schema.js";
+import { desc } from "drizzle-orm";
+import { playerSlotTable, playerSlotVersionTable } from "../db/schema.js";
 import { db } from "./db.js";
 import { serverConfig } from "./env.js";
 import { logger } from "../logger.js";
@@ -24,8 +24,8 @@ export const doSync = async () => {
         await db.insert(playerSlotVersionTable).values({ val: s })
     }
 
-    let to_insert = [];
-    for (let x of serverConfig.paceGroups) {
+    const to_insert = [];
+    for (const x of serverConfig.paceGroups) {
         for (let i = 0; i <= x.count; i += 1) {
             logger.debug({ paceGroup: x.name, slotIndex: i }, 'creating slot');
             to_insert.push({ paceGroup: x.name, slotIndex: i })
@@ -36,6 +36,4 @@ export const doSync = async () => {
     await db.insert(playerSlotTable).values(to_insert);
 
     logger.info('slot sync completed');
-
-
 };

@@ -15,6 +15,7 @@ const laneIdParamSchema = z.object({
     paceGroup: z.string(),
     position: z.string().transform(it => parseInt(it)),
 });
+
 /**
  * Assign a player to a lane slot
  * @route PUT /:paceGroup/:position/player
