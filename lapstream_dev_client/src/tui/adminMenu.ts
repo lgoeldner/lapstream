@@ -4,24 +4,25 @@ import { AuthApi } from '../api/auth.js';
 import { ApiClient } from '../api/client.js';
 import { AppState, Role, OtpClaim, GeneratedOtp } from '../types/api.js';
 import { promptForAdminToken } from './adminAuthPrompt.js';
+import { showReceptionMenu } from './receptionMenu.js';
+import { showLaneAssignMenu } from './laneAssignMenu.js';
 
-export async function showAdminMenu(apiClient: ApiClient, state: AppState, directOtpFlow = false): Promise<void> {
-  if (directOtpFlow) {
-    await generateOtpFlow(apiClient, state);
-    return;
-  }
+type BypassRole = 'reception' | 'lane_assign' | 'lane_count';
 
+export async function showAdminMenu(apiClient: ApiClient, state: AppState): Promise<void> {
   while (true) {
-    console.log(chalk.blue('\n=== Admin Menu ==='));
+    console.log(chalk.blue('\n=== Admin Bypass Menu ==='));
     console.log(chalk.gray(`Device: ${state.activeDevice?.deviceName}\n`));
 
     const answers = await inquirer.prompt([
       {
         type: 'select',
         name: 'action',
-        message: 'Choose action:',
+        message: 'Choose role submenu:',
         choices: [
-          { name: 'Generate OTPs for devices', value: 'generate_otps' },
+          { name: 'Reception submenu', value: 'reception' },
+          { name: 'Lane Assign submenu', value: 'lane_assign' },
+          { name: 'Lane Count submenu', value: 'lane_count' },
           { name: 'Back to main menu', value: 'back' }
         ],
         loop: false
@@ -29,18 +30,31 @@ export async function showAdminMenu(apiClient: ApiClient, state: AppState, direc
     ]);
 
     if (answers.action === 'back') {
-      break;
+      return;
     }
 
-    if (answers.action === 'generate_otps') {
-      await generateOtpFlow(apiClient, state);
-    }
+    await openBypassRoleMenu(answers.action as BypassRole, apiClient, state);
   }
 }
 
-async function generateOtpFlow(apiClient: ApiClient, state: AppState): Promise<void> {
+async function openBypassRoleMenu(role: BypassRole, apiClient: ApiClient, state: AppState): Promise<void> {
+  if (role === 'reception') {
+    await showReceptionMenu(apiClient, state);
+    return;
+  }
+
+  if (role === 'lane_assign') {
+    await showLaneAssignMenu(apiClient, state);
+    return;
+  }
+
+  console.log(chalk.yellow('\nLane count menu is not implemented yet.'));
+  await pressEnter();
+}
+
+export async function showGenerateOtpsFlow(apiClient: ApiClient, state: AppState): Promise<void> {
   console.log(chalk.blue('\n=== Generate OTPs ==='));
-  
+
   const adminToken = await promptForAdminToken(state);
 
   if (!adminToken) {
@@ -72,7 +86,7 @@ async function generateOtpFlow(apiClient: ApiClient, state: AppState): Promise<v
 
     for (const role of rolesToGenerate.roles) {
       console.log(chalk.cyan(`\n--- Configuration for ${chalk.bold(role)} devices ---`));
-      
+
       const config = await inquirer.prompt([
         {
           type: 'number',
@@ -129,7 +143,6 @@ async function generateOtpFlow(apiClient: ApiClient, state: AppState): Promise<v
     if (result.status === 'ok' && result.data) {
       console.log(chalk.green(`\n✓ ${result.data.length} OTPs generated successfully!\n`));
 
-      // Group by role for better display
       const grouped: Record<string, GeneratedOtp[]> = {};
       result.data.forEach((otp: GeneratedOtp) => {
         if (!grouped[otp.role]) grouped[otp.role] = [];
@@ -148,35 +161,25 @@ async function generateOtpFlow(apiClient: ApiClient, state: AppState): Promise<v
       console.log(chalk.red(`\n✗ Failed to generate OTPs: ${result.err || 'Unknown error'}`));
       if (result.err?.includes('Admin Token mismatch')) {
         console.log(chalk.red('  Invalid admin token'));
-        // If it was a saved token, maybe we should clear it?
         if (state.adminToken === adminToken) {
-           console.log(chalk.yellow('  Clearing invalid saved admin token...'));
-           state.adminToken = undefined;
-           const storage = await loadStorage();
-           storage.adminToken = undefined;
-           await saveStorage(storage);
+          state.adminToken = undefined;
         }
       }
     }
-
-    await inquirer.prompt([
-      {
-        type: 'input',
-        name: 'continue',
-        message: '\nPress enter to continue...'
-      }
-    ]);
-
   } catch (error) {
     console.log(chalk.red('\n✗ An error occurred while generating OTPs'));
     console.log(chalk.red(`  ${error instanceof Error ? error.message : 'Unknown error'}`));
-
-    await inquirer.prompt([
-      {
-        type: 'input',
-        name: 'continue',
-        message: '\nPress enter to continue...'
-      }
-    ]);
   }
+
+  await pressEnter();
+}
+
+async function pressEnter(): Promise<void> {
+  await inquirer.prompt([
+    {
+      type: 'input',
+      name: 'continue',
+      message: '\nPress enter to continue...'
+    }
+  ]);
 }

@@ -39,16 +39,4 @@ export class PlayersApi {
       };
     }
   }
-
-  async removeFromLane(playerId: number): Promise<ApiResponse<{ id: number; pace_group: string; slot_index: number; assigned_player: number | null }>> {
-    try {
-      const response = await this.client.getClient().delete(`/player/lane/${playerId}`);
-      return response.data;
-    } catch (error: any) {
-      return {
-        status: 'failure',
-        err: error.response?.data?.err || error.message || 'Failed to remove player from lane'
-      };
-    }
-  }
 }

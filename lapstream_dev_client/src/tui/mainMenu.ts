@@ -3,7 +3,7 @@ import chalk from 'chalk';
 import { ApiClient } from '../api/client.js';
 import { AppState, Role, DeviceProfile } from '../types/api.js';
 import { showAuthMenu } from './authMenu.js';
-import { showAdminMenu } from './adminMenu.js';
+import { showAdminMenu, showGenerateOtpsFlow } from './adminMenu.js';
 import { showReceptionMenu } from './receptionMenu.js';
 import { showLaneAssignMenu } from './laneAssignMenu.js';
 
@@ -107,9 +107,7 @@ export async function showMainMenu(apiClient: ApiClient, state: AppState): Promi
         break;
 
       case 'generate_otps':
-        // Generate OTPs is always available from adminMenu logic
-        // but we want to call it directly if possible
-        await showAdminMenu(apiClient, state, true); 
+        await showGenerateOtpsFlow(apiClient, state);
         break;
 
       case 'exit':

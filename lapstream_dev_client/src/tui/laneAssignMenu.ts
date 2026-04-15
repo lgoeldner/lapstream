@@ -20,7 +20,7 @@ export async function showLaneAssignMenu(apiClient: ApiClient, state: AppState):
         message: 'Choose action:',
         choices: [
           { name: 'Assign player to lane', value: 'assign_player' },
-          { name: 'Remove player from lane', value: 'remove_from_lane' },
+          { name: 'Unassign player from lane', value: 'unassign_player' },
           { name: 'List all players', value: 'list_players' },
           { name: 'Back to main menu', value: 'back' }
         ]
@@ -31,8 +31,8 @@ export async function showLaneAssignMenu(apiClient: ApiClient, state: AppState):
       case 'assign_player':
         await assignPlayerFlow(lanesApi, playersApi);
         break;
-      case 'remove_from_lane':
-        await removeFromLaneFlow(playersApi);
+      case 'unassign_player':
+        await unassignPlayerFlow(lanesApi);
         break;
       case 'list_players':
         await listPlayersFlow(playersApi);
@@ -119,38 +119,52 @@ async function assignPlayerFlow(lanesApi: LanesApi, playersApi: PlayersApi): Pro
   await pressEnter();
 }
 
-async function removeFromLaneFlow(playersApi: PlayersApi): Promise<void> {
-  console.log(chalk.blue('\n=== Remove Player From Lane ==='));
-  console.log(chalk.gray('Enter player ID (0 to cancel)\n'));
+async function unassignPlayerFlow(lanesApi: LanesApi): Promise<void> {
+  console.log(chalk.blue('\n=== Unassign Player From Lane ===\n'));
 
   try {
+    const choices = [
+      ...['A', 'B', 'C'].map(group => ({
+        name: `Group ${group}`,
+        value: group
+      })),
+      { name: chalk.yellow('Cancel'), value: 'cancel' }
+    ];
+
     const answers = await inquirer.prompt([
       {
+        type: 'select',
+        name: 'paceGroup',
+        message: 'Select pace group:',
+        choices: choices
+      },
+      {
         type: 'number',
-        name: 'playerId',
-        message: 'Enter player ID to remove from lane:',
+        name: 'position',
+        message: 'Lane position (1-8, 0 to cancel):',
+        when: (ans) => ans.paceGroup !== 'cancel',
         validate: (input: number) => {
           if (input === 0) return true;
-          if (!input || input < 1) {
-            return 'Please enter a valid player ID';
+          if (!input || input < 1 || input > 8) {
+            return 'Position must be between 1 and 8';
           }
           return true;
         }
       }
     ]);
 
-    if (answers.playerId === 0) {
+    if (answers.paceGroup === 'cancel' || answers.position === 0) {
       console.log(chalk.yellow('\nOperation cancelled.'));
       return;
     }
 
-    const result = await playersApi.removeFromLane(answers.playerId);
+    const result = await lanesApi.unassignPlayer(answers.paceGroup, answers.position);
 
     if (result.status === 'ok' && result.data) {
-      console.log(chalk.green('\n✓ Player removed from lane successfully'));
+      console.log(chalk.green('\n✓ Player unassigned from lane successfully'));
       console.log(chalk.gray(`Lane ${result.data.pace_group}${result.data.slot_index} is now available`));
     } else {
-      console.log(chalk.red(`\n✗ Failed to remove player: ${result.err || 'Unknown error'}`));
+      console.log(chalk.red(`\n✗ Failed to unassign player: ${result.err || 'Unknown error'}`));
     }
   } catch (error) {
     console.log(chalk.red('\n✗ An error occurred'));

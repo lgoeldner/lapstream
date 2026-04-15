@@ -40,7 +40,7 @@ export const getPlayerController: RequestHandler = async (req, res) => {
     return res.status(200).json({ status: 'ok', data: await getPlayers() });
 };
 
-export const removePlayerFromSlotController: RequestHandler = async (req, res) => {
+export const deleteLanePlayerController: RequestHandler = async (req, res) => {
     const player_id = parseInt(req.params.id as string);
 
     if (!player_id)

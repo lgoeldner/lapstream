@@ -20,7 +20,6 @@ export async function showReceptionMenu(apiClient: ApiClient, state: AppState): 
           { name: 'Register new player', value: 'create_player' },
           { name: 'List all players', value: 'list_players' },
           { name: 'View player details', value: 'view_player' },
-          { name: 'Remove player from lane', value: 'remove_from_lane' },
           { name: 'Back to main menu', value: 'back' }
         ]
       }
@@ -35,9 +34,6 @@ export async function showReceptionMenu(apiClient: ApiClient, state: AppState): 
         break;
       case 'view_player':
         await viewPlayerFlow(playersApi);
-        break;
-      case 'remove_from_lane':
-        await removeFromLaneFlow(playersApi);
         break;
       case 'back':
         return;
@@ -154,42 +150,6 @@ async function viewPlayerFlow(playersApi: PlayersApi): Promise<void> {
     console.log(chalk.gray('  Age:'), chalk.white(result.data.age));
   } else {
     console.log(chalk.red(`\n✗ Player not found: ${result.err || 'Unknown error'}`));
-  }
-
-  await pressEnter();
-}
-
-async function removeFromLaneFlow(playersApi: PlayersApi): Promise<void> {
-  console.log(chalk.blue('\n=== Remove Player From Lane ==='));
-  console.log(chalk.gray('Enter player ID (0 to cancel)\n'));
-
-  const answers = await inquirer.prompt([
-    {
-      type: 'number',
-      name: 'playerId',
-      message: 'Enter player ID to remove from lane:',
-      validate: (input: number) => {
-        if (input === 0) return true;
-        if (!input || input < 1) {
-          return 'Please enter a valid player ID';
-        }
-        return true;
-      }
-    }
-  ]);
-
-  if (answers.playerId === 0) {
-    console.log(chalk.yellow('\nOperation cancelled.'));
-    return;
-  }
-
-  const result = await playersApi.removeFromLane(answers.playerId);
-
-  if (result.status === 'ok' && result.data) {
-    console.log(chalk.green('\n✓ Player removed from lane successfully'));
-    console.log(chalk.gray(`Lane ${result.data.pace_group}${result.data.slot_index} is now available`));
-  } else {
-    console.log(chalk.red(`\n✗ Failed to remove player: ${result.err || 'Unknown error'}`));
   }
 
   await pressEnter();

@@ -2,7 +2,7 @@ import { Router } from "express";
 import { reqRole } from "../middleware/requireRole.js";
 import {
     newPlayerController,
-    removePlayerFromSlotController,
+    
     getPlayerController
 } from "../controllers/player.controller.js";
 
@@ -18,4 +18,4 @@ playerRouter.post('/', reqRole('reception'), newPlayerController)
 playerRouter.get('/{:id}', reqRole('reception'), getPlayerController)
 //playerRouter.get('/', reqRole('reception'), getPlayerController)
 
-playerRouter.delete('/lane/:id', reqRole('reception'), removePlayerFromSlotController);
+// playerRouter.delete('/lane/:id', reqRole('reception'), deleteLanePlayerController);

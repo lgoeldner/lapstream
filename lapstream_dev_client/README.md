@@ -11,11 +11,12 @@ A terminal-based TUI (Text User Interface) client for testing the LapStream API 
   - Register new players
   - List all players
   - View player details
-  - Remove players from lanes
 - Lane assignment (lane_assign role)
   - Assign players to lane slots
-  - Remove players from lanes
+  - Unassign players from lanes
   - View available players
+- Admin bypass menu (admin role)
+  - Role submenus for reception/lane_assign/lane_count access
 
 ## Setup
 

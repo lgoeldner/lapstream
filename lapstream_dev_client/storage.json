@@ -4,8 +4,16 @@
       "deviceName": "Reception",
       "role": "reception",
       "credentials": {
-        "jwt": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoicmVjZXB0aW9uIiwiaWF0IjoxNzc1MDY4ODQwLCJleHAiOjE3NzUwNjk0NDAsInN1YiI6IjMwIiwiYXVkIjoibGFwc3RyZWFtLWFwaSJ9.vkrRARk1c8Gx_wF6gvghQ4_4qL8CDO2UknAL_npLJug",
-        "refresh_token": "FdNN5isPJhKQSiWVTeQSlYh2rPjfs/1LL8l+APmnJhhdx3BXcq54zwbDHe517u6zoj/UFHT7R7FvfCFNI5qnog=="
+        "jwt": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoicmVjZXB0aW9uIiwiaWF0IjoxNzc1MDY5NjA5LCJleHAiOjE3NzUwNzAyMDksInN1YiI6IjMwIiwiYXVkIjoibGFwc3RyZWFtLWFwaSJ9.kbkVQBhFi8L4bJpISJnnR9GTR3rWnNiqX8jRAPY95N4",
+        "refresh_token": "w26qLer08F5+ElGTSDyJv39N7X0WUQh0OTTjTNkZvFhYBc+H+RSs3VZG9kd2oOobvoJy264+aNZgELx6/mcMSg=="
+      }
+    },
+    {
+      "deviceName": "Admin",
+      "role": "admin",
+      "credentials": {
+        "jwt": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3NzUwNjk2NDgsImV4cCI6MTc3NTA3MDI0OCwic3ViIjoiMzEiLCJhdWQiOiJsYXBzdHJlYW0tYXBpIn0.ma6AH46bCKf6kEDMeKRFAYsIMvlj5w9GPHIA0v_1Heg",
+        "refresh_token": "mBypQxDHX+IoPs0Gg472kWRQ+bzcpS5BxlV6iFJmuzT9LmRyHWpWOo2qeKUmW3zK5K7rYeVvLpJo+egqc8gq7Q=="
       }
     }
   ],

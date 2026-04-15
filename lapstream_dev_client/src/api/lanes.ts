@@ -18,4 +18,18 @@ export class LanesApi {
       };
     }
   }
+
+  async unassignPlayer(paceGroup: string, position: number): Promise<ApiResponse<LaneSlot>> {
+    try {
+      const response = await this.client.getClient().delete(
+        `/lane/${paceGroup}/${position}/player`
+      );
+      return response.data;
+    } catch (error: any) {
+      return {
+        status: 'failure',
+        err: error.response?.data?.err || error.message || 'Failed to unassign player from lane'
+      };
+    }
+  }
 }
