@@ -1,0 +1,8 @@
+{
+    "baseUrl": "localhost:3000",
+    "device": {
+        "device_name": null,
+        "role": null,
+        "refresh_token": null
+    }
+}
