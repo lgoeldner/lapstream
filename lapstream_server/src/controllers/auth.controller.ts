@@ -5,6 +5,7 @@ import { env } from "../config/env.js";
 import { logger } from "../logger.js";
 import { enroll, generateOTPs } from "../services/auth.services.js";
 import { refreshToken } from "../services/auth.services.js";
+import { err, ok } from "../lib/apiResponse.js";
 
 
 
@@ -15,10 +16,10 @@ const otpClaimsSchema = z.array(z.object({
 export type OtpClaims = z.infer<typeof otpClaimsSchema>;
 export type Role = z.infer<typeof otpClaimsSchema.element.shape.role>;
 
-const authenticateSuperUser = (auth_header: string | undefined): { status: 'ok' } | { status: 'failure', err: string } => {
+const authenticateSuperUser = (auth_header: string | undefined): { status: 'ok' } | { status: 'err', err: unknown } => {
     if (!auth_header) {
         logger.warn(`no admin token on request to gen OTPs`)
-        return { status: 'failure', err: 'missing admin token' };
+        return err('missing admin token');
     }
     // remove 'Bearer ' prefix and transform to 
     const usr_input = auth_header.replace(/Bearer\s/i, '');
@@ -27,7 +28,7 @@ const authenticateSuperUser = (auth_header: string | undefined): { status: 'ok' 
 
     if (user_token.byteLength != api_token.byteLength || !timingSafeEqual(user_token, api_token)) {
         logger.warn('admin token wrong')
-        return { status: 'failure', err: 'Admin Token mismatch' };
+        return err('Admin Token mismatch');
     }
 
     return { status: 'ok' };
@@ -37,27 +38,27 @@ export const generateOTPsAdminController: RequestHandler = async (req, res) => {
     // authenticate admin via admin api token
     const input = req.headers.authorization;
     const isAuthorized = authenticateSuperUser(input);
-    if (isAuthorized.status === 'failure') {
-        return res.status(401).json(isAuthorized.err);
+    if (isAuthorized.status === 'err') {
+        return res.status(401).json(isAuthorized);
     }
 
     // authentication as admin OK
 
     const claims = otpClaimsSchema.safeParse(req.body);
     if (claims.error) {
-        return res.status(400).json({ status: 'failure', error: claims.error })
+        return res.status(400).json(err(claims.error))
     }
 
     // generate and return OTPs
     const ret = await generateOTPs(claims.data);
-    return res.status(200).json(ret);
+    return res.status(200).json(ok(ret));
 };
 
 const enrollSchema = z.object({ otp: z.string().length(6) });
 export const enrollController: RequestHandler = async (req, res) => {
     const parseRes = enrollSchema.safeParse(req.body);
     if (!parseRes.success) {
-        return res.status(400).json({ status: 'failure', err: parseRes.error });
+        return res.status(400).json(err(parseRes.error));
     }
     const s = await enroll(parseRes.data.otp);
 
@@ -71,7 +72,7 @@ const refreshSchema = z.object({
 export const refreshController: RequestHandler = async (req, res) => {
     const parseRes = refreshSchema.safeParse(req.body);
     if (!parseRes.success) {
-        return res.status(400).json({ status: 'failure', err: 'invalid request format' });
+        return res.status(400).json(err('invalid request format'));
     }
 
     const result = await refreshToken(parseRes.data.refresh_token);

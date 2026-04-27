@@ -3,13 +3,13 @@ import { db } from "../config/db.js";
 import { playerSlotTable } from "../db/schema.js";
 import { logger } from "../logger.js";
 import { serverConfig } from "../config/env.js";
+import { ApiResponse, err, ok } from "../lib/apiResponse.js";
 
 type PlayerSlotRow = typeof playerSlotTable.$inferSelect;
 
 
 
-type AssignPlayerResult = { status: 'ok', data: PlayerSlotRow }
-    | { status: 'failure', err: string };
+type AssignPlayerResult = ApiResponse<PlayerSlotRow>;
 
 /**
  * Return a list of all valid pace groups including their capacity
@@ -48,16 +48,16 @@ export const setLanePlayer = async (pace_group: string, position: number, player
 
         if (!updated[0]) {
             logger.warn(`player id=${player_id} could not be assigned to pace_group=${pace_group} position=${position}`);
-            return { status: 'failure', err: 'slot taken' };
+            return err('slot taken');
         }
 
-        return { status: 'ok', data: updated[0] };
-    } catch (err) {
-        logger.error({ err }, 'Error during player assignment transaction');
-        if (err instanceof Error) {
-            return { status: 'failure', err: err.message };
+        return ok(updated[0]);
+    } catch (caughtError) {
+        logger.error({ err: caughtError }, 'Error during player assignment transaction');
+        if (caughtError instanceof Error) {
+            return err(caughtError.message);
         }
 
-        return { status: 'failure', err: 'unknown error' };
+        return err('unknown error');
     }
 };

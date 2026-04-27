@@ -23,7 +23,7 @@ export class LanesApi {
       return r.data;
     } catch (error: any) {
       return {
-        status: 'failure',
+        status: 'err',
         err: error.response?.data?.err || error.message || 'Failed to fetch pace groups'
       };
     }
@@ -38,7 +38,7 @@ export class LanesApi {
       return response.data;
     } catch (error: any) {
       return {
-        status: 'failure',
+        status: 'err',
         err: error.response?.data?.err || error.message || 'Failed to assign player to lane'
       };
     }
@@ -52,7 +52,7 @@ export class LanesApi {
       return response.data;
     } catch (error: any) {
       return {
-        status: 'failure',
+        status: 'err',
         err: error.response?.data?.err || error.message || 'Failed to unassign player from lane'
       };
     }

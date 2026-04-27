@@ -9,6 +9,7 @@ import LoginDialog, { ClientData } from "./components/LoginPage";
 import { ThemeProvider } from "./components/theme_provider";
 import { RolesRouter } from "./components/RolesRouter";
 import { ConfigContext } from "./components/ConfigContext";
+import { ErrorBoundary } from "./components/ErrorBoundary.tsx";
 
 const unreachable = (): never => {
     throw new Error("unreachable");
@@ -32,29 +33,31 @@ function App() {
 
     return (
         <ThemeProvider>
-            <main className=" w-full h-full overscroll-none fixed overflow-hidden">
-                {appPage === "login" ? (
-                    <LoginDialog
-                        onLogin={(d) => {
-                            saveClientData(d);
-                            setConfig(getStoredConfig());
-                            setAppPage("reception");
-                        }}
-                    />
-                ) : (
-                    <ConfigContext.Provider value={config}>
-                        <RolesRouter
-                            page={appPage}
-                            reauth={() => {
-                                setConfig(null);
-                                setAppPage("login");
-                                // bypass never type error since this wont return
-                                return;
+            <ErrorBoundary>
+                <main className=" w-full h-full overscroll-none fixed overflow-hidden">
+                    {appPage === "login" ? (
+                        <LoginDialog
+                            onLogin={(d) => {
+                                saveClientData(d);
+                                setConfig(getStoredConfig());
+                                setAppPage("reception");
                             }}
                         />
-                    </ConfigContext.Provider>
-                )}
-            </main>
+                    ) : (
+                        <ConfigContext.Provider value={config}>
+                            <RolesRouter
+                                page={appPage}
+                                reauth={() => {
+                                    setConfig(null);
+                                    setAppPage("login");
+                                    // bypass never type error since this wont return
+                                    return;
+                                }}
+                            />
+                        </ConfigContext.Provider>
+                    )}
+                </main>
+            </ErrorBoundary>
         </ThemeProvider>
     );
 }

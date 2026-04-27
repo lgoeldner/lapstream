@@ -3,34 +3,28 @@ import { Role } from "../controllers/auth.controller.js";
 import { logger } from "../logger.js";
 import * as jose from 'jose';
 import { env } from "../config/env.js";
+import { err } from "../lib/apiResponse.js";
 
 export const reqRole = (...required: Role[]): RequestHandler => async (req, res, next) => {
     const a = req.headers.authorization;
     const jwt = a?.replace(/Bearer\s/i, '');
     if (!jwt) {
         logger.warn('Auth Missing!');
-        return res.status(403).json({
-            status: 'failure',
-            err: `missing authentication! enroll device with '${JSON.stringify(required)}' permissions first`
-        });
+        return res.status(403).json(
+            err(`missing authentication! enroll device with '${JSON.stringify(required)}' permissions first`)
+        );
     }
 
     // verify the JWT
     let verified;
     try {
         verified = await jose.jwtVerify(jwt, env.JWT_SECRET);
-    } catch (e) {
-        if (e instanceof Error) {
-            return res.status(403).json({
-                status: 'failure',
-                err: `${e.message}, ${e.stack}`
-            });
+    } catch (caughtError) {
+        if (caughtError instanceof Error) {
+            return res.status(403).json(err(`${caughtError.message}, ${caughtError.stack}`));
         }
 
-        return res.status(403).json({
-            status: 'failure',
-            err: ``
-        });
+        return res.status(403).json(err(''));
     }
 
 
@@ -41,10 +35,7 @@ export const reqRole = (...required: Role[]): RequestHandler => async (req, res,
             `device with expired JWT Token  tried to access api with requirement='${JSON.stringify(required)}' token=${JSON.stringify(verified.payload)}`
         );
 
-        return res.status(403).json({
-            status: 'failure',
-            err: `Authentication expired! use refresh token to get new JWT!`
-        });
+        return res.status(403).json(err(`Authentication expired! use refresh token to get new JWT!`));
     }
 
     // check role
@@ -54,9 +45,6 @@ export const reqRole = (...required: Role[]): RequestHandler => async (req, res,
         next()
     } else {
         logger.warn(`device with role=${jwt_role} tried to access api with requirements='${JSON.stringify(required)}'`);
-        return res.status(403).json({
-            status: 'failure',
-            err: `wrong role! required: '${JSON.stringify(required)}', you have: ${jwt_role}`
-        });
+        return res.status(403).json(err(`wrong role! required: '${JSON.stringify(required)}', you have: ${jwt_role}`));
     }
 };

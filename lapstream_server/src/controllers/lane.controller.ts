@@ -2,6 +2,7 @@ import type { RequestHandler } from 'express';
 import { z } from 'zod';
 import { setLanePlayer } from '../services/lane.services.js';
 import { logger } from '../logger.js';
+import { err } from '../lib/apiResponse.js';
 
 
 
@@ -25,14 +26,14 @@ const laneIdParamSchema = z.object({
  * Body parameters:
  * - player_id: number
  * Response:
- * - 201: { status: 'success', data: { pace_group: string, position: string, player_id: number } }
- * - 400: { status: 'failure', err: string }
+ * - 200: { status: 'ok', data: { paceGroup: string, slotIndex: number, assignedPlayer: number | null } }
+ * - 400: { status: 'err', err: unknown }
  */
 export const setLanePlayerController: RequestHandler = async (req, res) => {
     logger.info({ par: req.params });
     const parseRes = laneIdParamSchema.safeParse(req.params);
     if (!parseRes.success) {
-        return res.status(400).json({ status: 'failure', err: parseRes.error });
+        return res.status(400).json(err(parseRes.error));
     }
 
     const { paceGroup, position } = parseRes.data;
@@ -40,12 +41,12 @@ export const setLanePlayerController: RequestHandler = async (req, res) => {
     const r = lanePlayerAssignBodySchema.safeParse(req.body);
 
     if (!r.success) {
-        return res.status(400).json({ status: "failure", err: r.error });
+        return res.status(400).json(err(r.error));
     }
 
     const rs = await setLanePlayer(paceGroup, position, r.data.player_id);
 
-    if (rs.status === 'failure')
+    if (rs.status === 'err')
         return res.status(400).json(rs);
 
     return res.status(200).json(rs);

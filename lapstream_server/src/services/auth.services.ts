@@ -6,6 +6,7 @@ import { clientsTable, otpCodeTable, refreshTokenTable } from "../db/schema.js";
 import { and, eq, gt, isNull } from "drizzle-orm";
 import { SignJWT } from 'jose';
 import { env } from "../config/env.js";
+import { ApiResponse, err, ok } from "../lib/apiResponse.js";
 
 
 // TODO: move to db
@@ -14,22 +15,19 @@ import { env } from "../config/env.js";
 const OTP_EXPIRY_MS = 5 * 60 * 1000;
 const OTP_LENGTH = 6;
 
-type ValidateResult = { status: 'ok', data: ClientData } | { status: 'failure', err: string };
+type ValidateResult = ApiResponse<ClientData>;
 // Known Data about a client, including client id, role, name, and registered_at
 type ClientData = typeof clientsTable.$inferSelect;
 
 type EnrollResult =
-    { status: 'failure', err: string }
-    | {
-        status: 'ok', data: {
-            role: Role,
-            name?: string | undefined,
-            credentials: {
-                jwt: string,
-                refresh_token: string
-            }
+    ApiResponse<{
+        role: Role,
+        name?: string | undefined,
+        credentials: {
+            jwt: string,
+            refresh_token: string
         }
-    };
+    }>;
 
 // OTPs are bound to their device name and role
 export const generateOTPs = async (claims: OtpClaims) => {
@@ -57,10 +55,10 @@ export const enroll = async (otp_code: string): Promise<EnrollResult> => {
     // validate the OTP and create the new User
     const new_user = await validateOTP(otp_code);
     // generate JWT, refresh token
-    if (new_user.status === 'failure') return new_user;
+    if (new_user.status === 'err') return new_user;
 
     const credentials = await generateCredentials(new_user.data);
-    return { status: 'ok', data: { ...new_user.data, credentials } };
+    return ok({ ...new_user.data, credentials });
 };
 
 
@@ -88,15 +86,15 @@ const validateOTP = async (otp_code: string): Promise<ValidateResult> => {
                 deviceName: data.deviceName,
             }).returning();
         })
-        return { status: 'ok', data: s[0]! };
-    } catch (err) {
-        logger.error(`exception in validateOTP: ${err as Error}`)
+        return ok(s[0]!);
+    } catch (caughtError) {
+        logger.error(`exception in validateOTP: ${caughtError as Error}`)
 
-        if (err instanceof Error) {
-            return { status: 'failure', err: err.message };
+        if (caughtError instanceof Error) {
+            return err(caughtError.message);
         }
 
-        return { status: 'failure', err: 'unknown' };
+        return err('unknown');
     }
 };
 
@@ -151,7 +149,7 @@ const hashRefreshToken = (token: string) =>
         .update(token)
         .digest('base64');
 
-export type RefreshResult = { status: 'failure', err: string } | { status: 'ok', data: { jwt: string, refresh_token: string } };
+export type RefreshResult = ApiResponse<{ jwt: string, refresh_token: string }>;
 
 /**
  * Uses a refresh token to generate new credentials (JWT + refresh token)
@@ -215,13 +213,13 @@ export const refreshToken = async (old_token: string): Promise<RefreshResult> =>
 
             logger.info({ clientId: client.id }, 'Successfully rotated refresh token');
 
-            return { status: 'ok', data: { jwt: new_jwt, refresh_token: new_refresh_token } };
+            return ok({ jwt: new_jwt, refresh_token: new_refresh_token });
         });
-    } catch (err) {
-        logger.error({ err }, 'Error during token refresh');
-        if (err instanceof Error) {
-            return { status: 'failure', err: err.message };
+    } catch (caughtError) {
+        logger.error({ err: caughtError }, 'Error during token refresh');
+        if (caughtError instanceof Error) {
+            return err(caughtError.message);
         }
-        return { status: 'failure', err: 'unknown error during refresh' };
+        return err('unknown error during refresh');
     }
 };

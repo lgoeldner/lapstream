@@ -1,6 +1,7 @@
 import { eq } from 'drizzle-orm';
 import { db } from '../config/db.js';
 import { playerSlotRow, playerSlotTable, playersTable } from '../db/schema.js';
+import { ApiResponse, err, ok } from '../lib/apiResponse.js';
 
 export type NewUserInput = {
     name: string;
@@ -21,7 +22,7 @@ export const registerPlayer = async (input: NewUserInput): Promise<typeof player
 };
 
 
-type removePlayerResult = { status: 'ok', data: playerSlotRow } | { status: 'failure', err: string };
+type removePlayerResult = ApiResponse<playerSlotRow>;
 
 export const removePlayerFromSlot = async (player_id: number): Promise<removePlayerResult> => {
     const ret = await db.update(playerSlotTable)
@@ -31,7 +32,7 @@ export const removePlayerFromSlot = async (player_id: number): Promise<removePla
 
     // send 'player_left' event to 'lap_counter' type clients
 
-    return (ret[0]) ? { status: 'ok', data: ret[0] } : { status: 'failure', err: `${player_id} is not assigned to a lane` };
+    return ret[0] ? ok(ret[0]) : err(`${player_id} is not assigned to a lane`);
 };
 
 export const getPlayerSlots = async (): Promise<typeof playerSlotTable.$inferSelect[]> => {

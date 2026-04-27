@@ -158,8 +158,9 @@ export async function showGenerateOtpsFlow(apiClient: ApiClient, state: AppState
       }
       console.log(chalk.gray('\nNote: OTPs expire in 5 minutes.'));
     } else {
-      console.log(chalk.red(`\n✗ Failed to generate OTPs: ${result.err || 'Unknown error'}`));
-      if (result.err?.includes('Admin Token mismatch')) {
+      const errorMessage = typeof result.err === 'string' ? result.err : 'Unknown error';
+      console.log(chalk.red(`\n✗ Failed to generate OTPs: ${errorMessage}`));
+      if (typeof result.err === 'string' && result.err.includes('Admin Token mismatch')) {
         console.log(chalk.red('  Invalid admin token'));
         if (state.adminToken === adminToken) {
           state.adminToken = undefined;

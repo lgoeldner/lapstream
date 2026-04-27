@@ -10,7 +10,7 @@ export class AuthApi {
       return response.data;
     } catch (error: any) {
       return {
-        status: 'failure',
+        status: 'err',
         err: error.response?.data?.err || error.message || 'Unknown error'
       };
     }
@@ -25,11 +25,11 @@ export class AuthApi {
       });
       return {
         status: 'ok',
-        data: response.data
+        data: response.data.data
       };
     } catch (error: any) {
       return {
-        status: 'failure',
+        status: 'err',
         err: error.response?.data?.err || error.message || 'Unknown error'
       };
     }

@@ -10,7 +10,7 @@ export class PlayersApi {
       return response.data;
     } catch (error: any) {
       return {
-        status: 'failure',
+        status: 'err',
         err: error.response?.data?.err || error.message || 'Failed to fetch players'
       };
     }
@@ -22,7 +22,7 @@ export class PlayersApi {
       return response.data;
     } catch (error: any) {
       return {
-        status: 'failure',
+        status: 'err',
         err: error.response?.data?.err || error.message || 'Failed to fetch player'
       };
     }
@@ -34,7 +34,7 @@ export class PlayersApi {
       return response.data;
     } catch (error: any) {
       return {
-        status: 'failure',
+        status: 'err',
         err: error.response?.data?.err || error.message || 'Failed to create player'
       };
     }

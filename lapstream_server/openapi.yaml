@@ -18,7 +18,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ServiceInfo"
+                $ref: "#/components/schemas/ServiceInfoResponse"
 
   /auth/admin/otp:
     post:
@@ -51,25 +51,19 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/GeneratedOtp"
-        "401":
-          description: Missing or invalid admin token
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - type: string
-                    example: missing admin token
-                  - type: string
-                    example: Admin Token mismatch
+                $ref: "#/components/schemas/GeneratedOtpListResponse"
         "400":
           description: Invalid payload
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/FailureResponse"
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Missing or invalid admin token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
   /auth/device:
     post:
@@ -97,20 +91,13 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                required: [status, data]
-                properties:
-                  status:
-                    type: string
-                    enum: [ok]
-                  data:
-                    $ref: "#/components/schemas/EnrolledDevice"
+                $ref: "#/components/schemas/EnrolledDeviceResponse"
         "400":
           description: Enrollment failed
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/FailureResponse"
+                $ref: "#/components/schemas/ErrorResponse"
 
   /auth/refresh:
     post:
@@ -136,26 +123,19 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                required: [status, data]
-                properties:
-                  status:
-                    type: string
-                    enum: [ok]
-                  data:
-                    $ref: "#/components/schemas/Credentials"
+                $ref: "#/components/schemas/CredentialsResponse"
         "400":
           description: Invalid request format
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/FailureResponse"
+                $ref: "#/components/schemas/ErrorResponse"
         "401":
           description: Invalid or reused refresh token
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/FailureResponse"
+                $ref: "#/components/schemas/ErrorResponse"
 
   /player:
     post:
@@ -185,26 +165,19 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                required: [status, data]
-                properties:
-                  status:
-                    type: string
-                    enum: [ok]
-                  data:
-                    $ref: "#/components/schemas/Player"
+                $ref: "#/components/schemas/PlayerResponse"
+        "400":
+          description: Invalid payload
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
         "403":
           description: Missing/invalid auth or wrong role
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/FailureResponse"
-        "500":
-          description: Invalid payload (current implementation behavior)
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/FailureResponse"
+                $ref: "#/components/schemas/ErrorResponse"
 
     get:
       tags: [players]
@@ -218,22 +191,13 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                required: [status, data]
-                properties:
-                  status:
-                    type: string
-                    enum: [ok]
-                  data:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/Player"
+                $ref: "#/components/schemas/PlayerListResponse"
         "403":
           description: Missing/invalid auth or wrong role
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/FailureResponse"
+                $ref: "#/components/schemas/ErrorResponse"
 
   /player/{id}:
     get:
@@ -254,28 +218,19 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                required: [status, data]
-                properties:
-                  status:
-                    type: string
-                    enum: [ok]
-                  data:
-                    nullable: true
-                    allOf:
-                      - $ref: "#/components/schemas/Player"
+                $ref: "#/components/schemas/NullablePlayerResponse"
         "400":
           description: Invalid ID parameter
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/FailureResponse"
+                $ref: "#/components/schemas/ErrorResponse"
         "403":
           description: Missing/invalid auth or wrong role
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/FailureResponse"
+                $ref: "#/components/schemas/ErrorResponse"
 
   /lane/pace-groups:
     get:
@@ -288,16 +243,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                required: [status, data]
-                properties:
-                  status:
-                    type: string
-                    enum: [ok]
-                  data:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/PaceGroup"
+                $ref: "#/components/schemas/PaceGroupListResponse"
 
   /lane/{paceGroup}/{position}/player:
     put:
@@ -335,26 +281,19 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                required: [status, data]
-                properties:
-                  status:
-                    type: string
-                    enum: [ok]
-                  data:
-                    $ref: "#/components/schemas/LaneSlot"
+                $ref: "#/components/schemas/LaneSlotResponse"
         "400":
           description: Invalid input or assignment failed
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/FailureResponse"
+                $ref: "#/components/schemas/ErrorResponse"
         "403":
           description: Missing/invalid auth or wrong role
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/FailureResponse"
+                $ref: "#/components/schemas/ErrorResponse"
 
     delete:
       tags: [lanes]
@@ -383,26 +322,19 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                required: [status, data]
-                properties:
-                  status:
-                    type: string
-                    enum: [ok]
-                  data:
-                    $ref: "#/components/schemas/LaneSlot"
+                $ref: "#/components/schemas/LaneSlotResponse"
         "400":
           description: Unassignment failed
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/FailureResponse"
+                $ref: "#/components/schemas/ErrorResponse"
         "403":
           description: Missing/invalid auth or wrong role
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/FailureResponse"
+                $ref: "#/components/schemas/ErrorResponse"
 
 components:
   securitySchemes:
@@ -416,6 +348,15 @@ components:
       name: Authorization
 
   schemas:
+    ErrorResponse:
+      type: object
+      required: [status, err]
+      properties:
+        status:
+          type: string
+          enum: [err]
+        err: {}
+
     Role:
       type: string
       enum: [admin, reception, lane_assign, lane_count]
@@ -430,6 +371,16 @@ components:
         ok:
           type: boolean
           example: true
+
+    ServiceInfoResponse:
+      type: object
+      required: [status, data]
+      properties:
+        status:
+          type: string
+          enum: [ok]
+        data:
+          $ref: "#/components/schemas/ServiceInfo"
 
     OtpClaim:
       type: object
@@ -455,6 +406,18 @@ components:
           type: string
           format: date-time
 
+    GeneratedOtpListResponse:
+      type: object
+      required: [status, data]
+      properties:
+        status:
+          type: string
+          enum: [ok]
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/GeneratedOtp"
+
     Credentials:
       type: object
       required: [jwt, refresh_token]
@@ -463,6 +426,16 @@ components:
           type: string
         refresh_token:
           type: string
+
+    CredentialsResponse:
+      type: object
+      required: [status, data]
+      properties:
+        status:
+          type: string
+          enum: [ok]
+        data:
+          $ref: "#/components/schemas/Credentials"
 
     EnrolledDevice:
       type: object
@@ -480,6 +453,16 @@ components:
         credentials:
           $ref: "#/components/schemas/Credentials"
 
+    EnrolledDeviceResponse:
+      type: object
+      required: [status, data]
+      properties:
+        status:
+          type: string
+          enum: [ok]
+        data:
+          $ref: "#/components/schemas/EnrolledDevice"
+
     Player:
       type: object
       required: [id, name, age]
@@ -491,9 +474,43 @@ components:
         age:
           type: integer
 
+    PlayerResponse:
+      type: object
+      required: [status, data]
+      properties:
+        status:
+          type: string
+          enum: [ok]
+        data:
+          $ref: "#/components/schemas/Player"
+
+    NullablePlayerResponse:
+      type: object
+      required: [status, data]
+      properties:
+        status:
+          type: string
+          enum: [ok]
+        data:
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/Player"
+
+    PlayerListResponse:
+      type: object
+      required: [status, data]
+      properties:
+        status:
+          type: string
+          enum: [ok]
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Player"
+
     LaneSlot:
       type: object
-      required: [id, paceGroup, slotIndex]
+      required: [id, paceGroup, slotIndex, assignedPlayer]
       properties:
         id:
           type: integer
@@ -505,6 +522,16 @@ components:
           type: integer
           nullable: true
 
+    LaneSlotResponse:
+      type: object
+      required: [status, data]
+      properties:
+        status:
+          type: string
+          enum: [ok]
+        data:
+          $ref: "#/components/schemas/LaneSlot"
+
     PaceGroup:
       type: object
       required: [name, count]
@@ -514,12 +541,14 @@ components:
         count:
           type: integer
 
-    FailureResponse:
+    PaceGroupListResponse:
       type: object
-      required: [status]
+      required: [status, data]
       properties:
         status:
           type: string
-          enum: [failure]
-        err:
-          type: string
+          enum: [ok]
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/PaceGroup"

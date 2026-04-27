@@ -1,9 +1,14 @@
-export interface ApiResponse<T> {
-  status: 'ok' | 'failure';
-  data?: T;
-  err?: string;
-  error?: unknown;
-}
+export type ApiResponse<T> =
+  | {
+      status: 'ok';
+      data: T;
+      err?: undefined;
+    }
+  | {
+      status: 'err';
+      err: unknown;
+      data?: undefined;
+    };
 
 export interface DeviceCredentials {
   jwt: string;
