@@ -1,6 +1,4 @@
 import { Button } from "@/components/ui/button";
-import { AppConfig } from "@/lib/config";
-import { Field, FieldGroup } from "./ui/field";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import {
@@ -15,8 +13,7 @@ import { Badge } from "./ui/badge";
 import { JSX, useEffect, useState } from "react";
 import { Spinner } from "./ui/spinner";
 import { LucideCheck, LucideX } from "lucide-react";
-import { Separator } from "./ui/separator";
-import { OTPInput, REGEXP_ONLY_DIGITS } from "input-otp";
+import { REGEXP_ONLY_DIGITS } from "input-otp";
 import {
     Dialog,
     DialogContent,
@@ -25,7 +22,7 @@ import {
     DialogTrigger,
 } from "./ui/dialog";
 import z from "zod";
-import { fi } from "zod/v4/locales";
+import { Api, registerDeviceResponseSchema } from "@/lib/api_access";
 
 // display a badge with three possible states: "loading" | "not_connected" | "connected"
 
@@ -57,29 +54,19 @@ function StatusBadge({ status }: { status: string }): JSX.Element {
     }
 }
 
-const DialogResponseSchema = z.object({
-    status: z.literal("ok"),
-    data: z.object({
-        id: z.number(),
-        deviceName: z.string(),
-        role: z.string(),
-        registeredAt: z.string(),
-        credentials: z.object({
-            jwt: z.string(),
-            refresh_token: z.string(),
-        }),
-    }),
-});
+export type ClientData = z.infer<typeof registerDeviceResponseSchema> & {
+    base_url: string;
+};
 
 type DialogState =
     | { status: "loading" }
-    | { status: "ok"; data: z.infer<typeof DialogResponseSchema> }
+    | { status: "ok"; data: ClientData }
     | { status: "failure"; err: string };
 
 export default function LoginDialog({
     onLogin,
 }: {
-    onLogin: (a: AppConfig) => void;
+    onLogin: (a: ClientData) => void;
 }) {
     const [urlInput, setUrlInput] = useState("");
     const [status, setStatus] = useState("not_connected");
@@ -134,35 +121,19 @@ export default function LoginDialog({
         if (otpInput.length == 6) {
             const doRegisterDevice = async () => {
                 try {
-                    const res = await fetch(`${urlInput}/auth/device`, {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                        },
-                        body: JSON.stringify({ otp: otpInput }),
-                    });
-                    const data = await res.json();
+                    const res = await Api.registerDevice(urlInput, otpInput);
 
-                    if (!res.ok) {
+                    if (res.status !== "ok") {
                         setFinalDialogState({
                             status: "failure",
-                            err: data.err,
-                        });
-                        return;
-                    }
-
-                    const parsed = DialogResponseSchema.safeParse(data);
-                    if (parsed.error) {
-                        setFinalDialogState({
-                            status: "failure",
-                            err: parsed.error.message,
+                            err: res.err,
                         });
                         return;
                     }
 
                     setFinalDialogState({
                         status: "ok",
-                        data: parsed.data,
+                        data: { ...res.data, base_url: urlInput },
                     });
                     return;
                 } catch (ex) {}
@@ -186,8 +157,6 @@ export default function LoginDialog({
                     <Label className="pt-4 pb-2">
                         Base URL <StatusBadge status={status} />
                     </Label>
-                    {/* Add a Badge that tries to GET {base_url},
-                        showing wether a server could be reached */}
 
                     <Input
                         type="text"
@@ -214,7 +183,16 @@ export default function LoginDialog({
                             </InputOTPGroup>
                         </InputOTP>
 
-                        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                        <Dialog
+                            open={dialogOpen}
+                            onOpenChange={(ch) => {
+                                setDialogOpen(ch);
+                                // when successfully logged in, return to the start
+                                if (!ch && finalDialogState.status == "ok") {
+                                    onLogin(finalDialogState.data);
+                                }
+                            }}
+                        >
                             <DialogTrigger asChild>
                                 <Button
                                     className="ml-auto p-3 mr-3"
@@ -240,7 +218,14 @@ export default function LoginDialog({
 function LoginResultDialog({ result }: { result: DialogState }) {
     switch (result.status) {
         case "loading":
-            return <Spinner />;
+            return (
+                <DialogHeader>
+                    <DialogTitle className="flex flex-row items-center gap-2">
+                        Loading...
+                    </DialogTitle>
+                    <Spinner />
+                </DialogHeader>
+            );
         case "ok":
             return (
                 <>
@@ -259,12 +244,16 @@ function LoginResultDialog({ result }: { result: DialogState }) {
                     >
                         <Label className="ml-2 col-start-1">Name:</Label>
                         <p className="font-mono col-start-2">
-                            {result.data.data.deviceName}
+                            {(() => {
+                                console.log(result.data);
+                                return "";
+                            })()}
+                            {result.data.deviceName}
                         </p>
 
                         <Label className="ml-2 col-start-1">Role:</Label>
                         <p className="font-mono col-start-2">
-                            {result.data.data.role}
+                            {result.data.role}
                         </p>
                     </Card>
                 </>
