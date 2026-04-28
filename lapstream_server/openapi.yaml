@@ -1,554 +1,554 @@
 openapi: 3.0.3
 info:
-  title: LapStream API
-  version: 1.0.0
-  description: API for device authentication, player registration, and lane assignment.
+    title: LapStream API
+    version: 1.0.0
+    description: API for device authentication, player registration, and lane assignment.
 servers:
-  - url: "http://localhost:4000"
-    description: Local development server
+    - url: "http://localhost:4000"
+      description: Local development server
 paths:
-  /:
-    get:
-      tags: [health]
-      summary: Service info
-      description: Returns basic service information.
-      responses:
-        "200":
-          description: Service is running
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ServiceInfoResponse"
+    /:
+        get:
+            tags: [health]
+            summary: Service info
+            description: Returns basic service information.
+            responses:
+                "200":
+                    description: Service is running
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ServiceInfoResponse"
 
-  /auth/admin/otp:
-    post:
-      tags: [auth]
-      summary: Generate enrollment OTPs
-      description: |
-        Generates one-time enrollment codes for devices.
+    /auth/admin/otp:
+        post:
+            tags: [auth]
+            summary: Generate enrollment OTPs
+            description: |
+                Generates one-time enrollment codes for devices.
 
-        Requires admin token in the `Authorization` header:
-        `Authorization: Bearer <ADMIN_API_TOKEN>`
-      security:
-        - adminToken: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: array
-              minItems: 1
-              items:
-                $ref: "#/components/schemas/OtpClaim"
-            example:
-              - role: reception
-                name: Frontdesk 1
-              - role: lane_assign
-                name: Lane Tablet 1
-      responses:
-        "200":
-          description: OTPs generated
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/GeneratedOtpListResponse"
-        "400":
-          description: Invalid payload
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "401":
-          description: Missing or invalid admin token
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                Requires admin token in the `Authorization` header:
+                `Authorization: Bearer <ADMIN_API_TOKEN>`
+            security:
+                - adminToken: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: array
+                            minItems: 1
+                            items:
+                                $ref: "#/components/schemas/OtpClaim"
+                        example:
+                            - role: reception
+                              name: Frontdesk 1
+                            - role: lane_assign
+                              name: Lane Tablet 1
+            responses:
+                "200":
+                    description: OTPs generated
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/GeneratedOtpListResponse"
+                "400":
+                    description: Invalid payload
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ErrorResponse"
+                "401":
+                    description: Missing or invalid admin token
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ErrorResponse"
 
-  /auth/device:
-    post:
-      tags: [auth]
-      summary: Enroll device with OTP
-      description: Enrolls a device and returns JWT + refresh token credentials.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [otp]
-              properties:
-                otp:
-                  type: string
-                  minLength: 6
-                  maxLength: 6
-                  pattern: '^[0-9]{6}$'
-            example:
-              otp: "123456"
-      responses:
-        "200":
-          description: Enrollment successful
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/EnrolledDeviceResponse"
-        "400":
-          description: Enrollment failed
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
+    /auth/device:
+        post:
+            tags: [auth]
+            summary: Enroll device with OTP
+            description: Enrolls a device and returns JWT + refresh token credentials.
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required: [otp]
+                            properties:
+                                otp:
+                                    type: string
+                                    minLength: 6
+                                    maxLength: 6
+                                    pattern: "^[0-9]{6}$"
+                        example:
+                            otp: "123456"
+            responses:
+                "200":
+                    description: Enrollment successful
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/EnrolledDeviceResponse"
+                "400":
+                    description: Enrollment failed
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ErrorResponse"
 
-  /auth/refresh:
-    post:
-      tags: [auth]
-      summary: Rotate credentials using refresh token
-      description: Exchanges a refresh token for a new JWT and refresh token.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [refresh_token]
-              properties:
-                refresh_token:
-                  type: string
-                  minLength: 10
-            example:
-              refresh_token: "<refresh-token>"
-      responses:
-        "200":
-          description: Credentials refreshed
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/CredentialsResponse"
-        "400":
-          description: Invalid request format
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "401":
-          description: Invalid or reused refresh token
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
+    /auth/refresh:
+        post:
+            tags: [auth]
+            summary: Rotate credentials using refresh token
+            description: Exchanges a refresh token for a new JWT and refresh token.
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required: [refresh_token]
+                            properties:
+                                refresh_token:
+                                    type: string
+                                    minLength: 10
+                        example:
+                            refresh_token: "<refresh-token>"
+            responses:
+                "200":
+                    description: Credentials refreshed
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/CredentialsResponse"
+                "400":
+                    description: Invalid request format
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ErrorResponse"
+                "401":
+                    description: Invalid or reused refresh token
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ErrorResponse"
 
-  /player:
-    post:
-      tags: [players]
-      summary: Register player
-      description: Requires `reception` role (or `admin`).
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [name, age]
-              properties:
-                name:
-                  type: string
-                age:
-                  type: integer
-            example:
-              name: "Jane Doe"
-              age: 27
-      responses:
-        "201":
-          description: Player created
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/PlayerResponse"
-        "400":
-          description: Invalid payload
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "403":
-          description: Missing/invalid auth or wrong role
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
+    /player:
+        post:
+            tags: [players]
+            summary: Register player
+            description: Requires `reception` role (or `admin`).
+            security:
+                - bearerAuth: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required: [name, age]
+                            properties:
+                                name:
+                                    type: string
+                                age:
+                                    type: integer
+                        example:
+                            name: "Jane Doe"
+                            age: 27
+            responses:
+                "201":
+                    description: Player created
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/PlayerResponse"
+                "400":
+                    description: Invalid payload
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ErrorResponse"
+                "403":
+                    description: Missing/invalid auth or wrong role
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ErrorResponse"
 
-    get:
-      tags: [players]
-      summary: List players
-      description: Requires `reception` role (or `admin`).
-      security:
-        - bearerAuth: []
-      responses:
-        "200":
-          description: List of players
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/PlayerListResponse"
-        "403":
-          description: Missing/invalid auth or wrong role
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
+        get:
+            tags: [players]
+            summary: List players
+            description: Requires `reception` role (or `admin`).
+            security:
+                - bearerAuth: []
+            responses:
+                "200":
+                    description: List of players
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/PlayerListResponse"
+                "403":
+                    description: Missing/invalid auth or wrong role
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ErrorResponse"
 
-  /player/{id}:
-    get:
-      tags: [players]
-      summary: Get player by ID
-      description: Requires `reception` role (or `admin`).
-      security:
-        - bearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: Player found (or null if missing)
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/NullablePlayerResponse"
-        "400":
-          description: Invalid ID parameter
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "403":
-          description: Missing/invalid auth or wrong role
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
+    /player/{id}:
+        get:
+            tags: [players]
+            summary: Get player by ID
+            description: Requires `reception` role (or `admin`).
+            security:
+                - bearerAuth: []
+            parameters:
+                - in: path
+                  name: id
+                  required: true
+                  schema:
+                      type: integer
+            responses:
+                "200":
+                    description: Player found (or null if missing)
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/NullablePlayerResponse"
+                "400":
+                    description: Invalid ID parameter
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ErrorResponse"
+                "403":
+                    description: Missing/invalid auth or wrong role
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ErrorResponse"
 
-  /lane/pace-groups:
-    get:
-      tags: [lanes]
-      summary: List configured pace groups
-      description: Public endpoint. Returns server-configured pace groups and slot counts.
-      responses:
-        "200":
-          description: Pace groups
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/PaceGroupListResponse"
+    /lane/pace-groups:
+        get:
+            tags: [lanes]
+            summary: List configured pace groups
+            description: Public endpoint. Returns server-configured pace groups and slot counts.
+            responses:
+                "200":
+                    description: Pace groups
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/PaceGroupListResponse"
 
-  /lane/{paceGroup}/{position}/player:
-    put:
-      tags: [lanes]
-      summary: Assign player to lane slot
-      description: Requires `lane_assign` role (or `admin`).
-      security:
-        - bearerAuth: []
-      parameters:
-        - in: path
-          name: paceGroup
-          required: true
-          schema:
-            type: string
-        - in: path
-          name: position
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [player_id]
-              properties:
-                player_id:
-                  type: integer
-            example:
-              player_id: 42
-      responses:
-        "200":
-          description: Player assigned
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/LaneSlotResponse"
-        "400":
-          description: Invalid input or assignment failed
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "403":
-          description: Missing/invalid auth or wrong role
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
+    /lane/{paceGroup}/{position}/player:
+        put:
+            tags: [lanes]
+            summary: Assign player to lane slot
+            description: Requires `lane_assign` role (or `admin`).
+            security:
+                - bearerAuth: []
+            parameters:
+                - in: path
+                  name: paceGroup
+                  required: true
+                  schema:
+                      type: string
+                - in: path
+                  name: position
+                  required: true
+                  schema:
+                      type: integer
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required: [player_id]
+                            properties:
+                                player_id:
+                                    type: integer
+                        example:
+                            player_id: 42
+            responses:
+                "200":
+                    description: Player assigned
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/LaneSlotResponse"
+                "400":
+                    description: Invalid input or assignment failed
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ErrorResponse"
+                "403":
+                    description: Missing/invalid auth or wrong role
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ErrorResponse"
 
-    delete:
-      tags: [lanes]
-      summary: Unassign player from lane slot
-      description: |
-        Requires `lane_assign` role (or `admin`).
+        delete:
+            tags: [lanes]
+            summary: Unassign player from lane slot
+            description: |
+                Requires `lane_assign` role (or `admin`).
 
-        Endpoint exists in the current implementation, but the current handler wiring expects
-        a player id parameter and may return `missing player ID` until that mismatch is fixed.
-      security:
-        - bearerAuth: []
-      parameters:
-        - in: path
-          name: paceGroup
-          required: true
-          schema:
-            type: string
-        - in: path
-          name: position
-          required: true
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: Player unassigned
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/LaneSlotResponse"
-        "400":
-          description: Unassignment failed
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "403":
-          description: Missing/invalid auth or wrong role
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                Endpoint exists in the current implementation, but the current handler wiring expects
+                a player id parameter and may return `missing player ID` until that mismatch is fixed.
+            security:
+                - bearerAuth: []
+            parameters:
+                - in: path
+                  name: paceGroup
+                  required: true
+                  schema:
+                      type: string
+                - in: path
+                  name: position
+                  required: true
+                  schema:
+                      type: integer
+            responses:
+                "200":
+                    description: Player unassigned
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/LaneSlotResponse"
+                "400":
+                    description: Unassignment failed
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ErrorResponse"
+                "403":
+                    description: Missing/invalid auth or wrong role
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ErrorResponse"
 
 components:
-  securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
-    adminToken:
-      type: apiKey
-      in: header
-      name: Authorization
+    securitySchemes:
+        bearerAuth:
+            type: http
+            scheme: bearer
+            bearerFormat: JWT
+        adminToken:
+            type: apiKey
+            in: header
+            name: Authorization
 
-  schemas:
-    ErrorResponse:
-      type: object
-      required: [status, err]
-      properties:
-        status:
-          type: string
-          enum: [err]
-        err: {}
+    schemas:
+        ErrorResponse:
+            type: object
+            required: [status, err]
+            properties:
+                status:
+                    type: string
+                    enum: [err]
+                err: {}
 
-    Role:
-      type: string
-      enum: [admin, reception, lane_assign, lane_count]
+        Role:
+            type: string
+            enum: [admin, reception, lane_assign, lane_count]
 
-    ServiceInfo:
-      type: object
-      required: [service, ok]
-      properties:
-        service:
-          type: string
-          example: lapstream-server
-        ok:
-          type: boolean
-          example: true
+        ServiceInfo:
+            type: object
+            required: [service, ok]
+            properties:
+                service:
+                    type: string
+                    example: lapstream-server
+                online:
+                    type: boolean
+                    example: true
 
-    ServiceInfoResponse:
-      type: object
-      required: [status, data]
-      properties:
-        status:
-          type: string
-          enum: [ok]
-        data:
-          $ref: "#/components/schemas/ServiceInfo"
+        ServiceInfoResponse:
+            type: object
+            required: [status, data]
+            properties:
+                status:
+                    type: string
+                    enum: [ok]
+                data:
+                    $ref: "#/components/schemas/ServiceInfo"
 
-    OtpClaim:
-      type: object
-      required: [role]
-      properties:
-        role:
-          $ref: "#/components/schemas/Role"
-        name:
-          type: string
+        OtpClaim:
+            type: object
+            required: [role]
+            properties:
+                role:
+                    $ref: "#/components/schemas/Role"
+                name:
+                    type: string
 
-    GeneratedOtp:
-      type: object
-      required: [otp, role, deviceName, expiresAt]
-      properties:
-        otp:
-          type: string
-          example: "480942"
-        role:
-          $ref: "#/components/schemas/Role"
-        deviceName:
-          type: string
-        expiresAt:
-          type: string
-          format: date-time
+        GeneratedOtp:
+            type: object
+            required: [otp, role, deviceName, expiresAt]
+            properties:
+                otp:
+                    type: string
+                    example: "480942"
+                role:
+                    $ref: "#/components/schemas/Role"
+                deviceName:
+                    type: string
+                expiresAt:
+                    type: string
+                    format: date-time
 
-    GeneratedOtpListResponse:
-      type: object
-      required: [status, data]
-      properties:
-        status:
-          type: string
-          enum: [ok]
-        data:
-          type: array
-          items:
-            $ref: "#/components/schemas/GeneratedOtp"
+        GeneratedOtpListResponse:
+            type: object
+            required: [status, data]
+            properties:
+                status:
+                    type: string
+                    enum: [ok]
+                data:
+                    type: array
+                    items:
+                        $ref: "#/components/schemas/GeneratedOtp"
 
-    Credentials:
-      type: object
-      required: [jwt, refresh_token]
-      properties:
-        jwt:
-          type: string
-        refresh_token:
-          type: string
+        Credentials:
+            type: object
+            required: [jwt, refresh_token]
+            properties:
+                jwt:
+                    type: string
+                refresh_token:
+                    type: string
 
-    CredentialsResponse:
-      type: object
-      required: [status, data]
-      properties:
-        status:
-          type: string
-          enum: [ok]
-        data:
-          $ref: "#/components/schemas/Credentials"
+        CredentialsResponse:
+            type: object
+            required: [status, data]
+            properties:
+                status:
+                    type: string
+                    enum: [ok]
+                data:
+                    $ref: "#/components/schemas/Credentials"
 
-    EnrolledDevice:
-      type: object
-      required: [id, deviceName, role, registeredAt, credentials]
-      properties:
-        id:
-          type: integer
-        deviceName:
-          type: string
-        role:
-          $ref: "#/components/schemas/Role"
-        registeredAt:
-          type: string
-          format: date-time
-        credentials:
-          $ref: "#/components/schemas/Credentials"
+        EnrolledDevice:
+            type: object
+            required: [id, deviceName, role, registeredAt, credentials]
+            properties:
+                id:
+                    type: integer
+                deviceName:
+                    type: string
+                role:
+                    $ref: "#/components/schemas/Role"
+                registeredAt:
+                    type: string
+                    format: date-time
+                credentials:
+                    $ref: "#/components/schemas/Credentials"
 
-    EnrolledDeviceResponse:
-      type: object
-      required: [status, data]
-      properties:
-        status:
-          type: string
-          enum: [ok]
-        data:
-          $ref: "#/components/schemas/EnrolledDevice"
+        EnrolledDeviceResponse:
+            type: object
+            required: [status, data]
+            properties:
+                status:
+                    type: string
+                    enum: [ok]
+                data:
+                    $ref: "#/components/schemas/EnrolledDevice"
 
-    Player:
-      type: object
-      required: [id, name, age]
-      properties:
-        id:
-          type: integer
-        name:
-          type: string
-        age:
-          type: integer
+        Player:
+            type: object
+            required: [id, name, age]
+            properties:
+                id:
+                    type: integer
+                name:
+                    type: string
+                age:
+                    type: integer
 
-    PlayerResponse:
-      type: object
-      required: [status, data]
-      properties:
-        status:
-          type: string
-          enum: [ok]
-        data:
-          $ref: "#/components/schemas/Player"
+        PlayerResponse:
+            type: object
+            required: [status, data]
+            properties:
+                status:
+                    type: string
+                    enum: [ok]
+                data:
+                    $ref: "#/components/schemas/Player"
 
-    NullablePlayerResponse:
-      type: object
-      required: [status, data]
-      properties:
-        status:
-          type: string
-          enum: [ok]
-        data:
-          nullable: true
-          allOf:
-            - $ref: "#/components/schemas/Player"
+        NullablePlayerResponse:
+            type: object
+            required: [status, data]
+            properties:
+                status:
+                    type: string
+                    enum: [ok]
+                data:
+                    nullable: true
+                    allOf:
+                        - $ref: "#/components/schemas/Player"
 
-    PlayerListResponse:
-      type: object
-      required: [status, data]
-      properties:
-        status:
-          type: string
-          enum: [ok]
-        data:
-          type: array
-          items:
-            $ref: "#/components/schemas/Player"
+        PlayerListResponse:
+            type: object
+            required: [status, data]
+            properties:
+                status:
+                    type: string
+                    enum: [ok]
+                data:
+                    type: array
+                    items:
+                        $ref: "#/components/schemas/Player"
 
-    LaneSlot:
-      type: object
-      required: [id, paceGroup, slotIndex, assignedPlayer]
-      properties:
-        id:
-          type: integer
-        paceGroup:
-          type: string
-        slotIndex:
-          type: integer
-        assignedPlayer:
-          type: integer
-          nullable: true
+        LaneSlot:
+            type: object
+            required: [id, paceGroup, slotIndex, assignedPlayer]
+            properties:
+                id:
+                    type: integer
+                paceGroup:
+                    type: string
+                slotIndex:
+                    type: integer
+                assignedPlayer:
+                    type: integer
+                    nullable: true
 
-    LaneSlotResponse:
-      type: object
-      required: [status, data]
-      properties:
-        status:
-          type: string
-          enum: [ok]
-        data:
-          $ref: "#/components/schemas/LaneSlot"
+        LaneSlotResponse:
+            type: object
+            required: [status, data]
+            properties:
+                status:
+                    type: string
+                    enum: [ok]
+                data:
+                    $ref: "#/components/schemas/LaneSlot"
 
-    PaceGroup:
-      type: object
-      required: [name, count]
-      properties:
-        name:
-          type: string
-        count:
-          type: integer
+        PaceGroup:
+            type: object
+            required: [name, count]
+            properties:
+                name:
+                    type: string
+                count:
+                    type: integer
 
-    PaceGroupListResponse:
-      type: object
-      required: [status, data]
-      properties:
-        status:
-          type: string
-          enum: [ok]
-        data:
-          type: array
-          items:
-            $ref: "#/components/schemas/PaceGroup"
+        PaceGroupListResponse:
+            type: object
+            required: [status, data]
+            properties:
+                status:
+                    type: string
+                    enum: [ok]
+                data:
+                    type: array
+                    items:
+                        $ref: "#/components/schemas/PaceGroup"

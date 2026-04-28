@@ -1,6 +1,6 @@
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { Badge } from "./ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Badge } from "../ui/badge";
 import { LucideX } from "lucide-react";
 
 export class ErrorBoundary extends React.Component {
@@ -25,8 +25,8 @@ export class ErrorBoundary extends React.Component {
     render() {
         if (this.state.hasErrored)
             return (
-                <div className="h-full w-full flex items-center justify-center">
-                    <Card className="container">
+                <div className="flex items-center justify-center">
+                    <Card className="container m-6 ">
                         <CardHeader>
                             <CardTitle className="flex flex-row items-center gap-2 text-2xl">
                                 <Badge variant="destructive">

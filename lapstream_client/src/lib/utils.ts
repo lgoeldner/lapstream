@@ -8,32 +8,26 @@ export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
 
-const refreshJwtResponseSchema = z.object({
-    status: z.literal("ok"),
-    data: z.object({
-        jwt: z.string(),
-        refresh_token: z.string(),
-    }),
-});
+const parseJwt = (token: string) => {
+    const payload = token.split(".")[1];
+    return JSON.parse(atob(payload));
+};
 
-export const refreshJwt = async (config: Config) => {
+export const jwtIsExpired = (token: string) => {
+    const decoded = parseJwt(token);
+    const now = Math.floor(Date.now() / 1000);
+    return decoded.exp < now;
+};
+
+/*
+export const refreshAuth = async (config: Config) => {
     const api = new Api(config);
+    const result = await api.refreshAuth();
 
-    const res = await fetch(`${config.base_url}/auth/refresh`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-            refresh_token: config.credentials.refresh_token,
-        }),
-    });
-
-    const body = await res.json();
-
-    if (!res.ok) {
-        throw new Error(body.message || "Failed to refresh JWT");
+    if (result.status === "err") {
+        throw new Error(result.err.message || "Failed to refresh JWT");
     }
 
-    const parsed = refreshJwtResponseSchema.parse(body);
+    return result.data;
 };
+*/

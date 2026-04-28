@@ -91,6 +91,7 @@ export default function LoginDialog({
                 const res = await fetch(urlInput, {
                     signal: controller.signal,
                 });
+
                 if (!res.ok) {
                     setStatus("not_connected");
                     return;
@@ -98,7 +99,7 @@ export default function LoginDialog({
 
                 const data = await res.json();
 
-                if (data.service === "lapstream-server") {
+                if (data.data.service === "lapstream-server") {
                     setStatus("connected");
                     return;
                 }
@@ -148,10 +149,8 @@ export default function LoginDialog({
         <div className=" h-dvh w-dvw flex justify-center items-center">
             <Card className="flex min-w-md min-h-fit max-h-3/4">
                 <CardHeader className="">
-                    <CardTitle>Login</CardTitle>
-                    <CardDescription>
-                        Enter missing information to connect to Server
-                    </CardDescription>
+                    <CardTitle className="text-2xl font-bold">Login</CardTitle>
+                    <CardDescription>Ask admin for OTP</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Label className="pt-4 pb-2">
@@ -197,7 +196,12 @@ export default function LoginDialog({
                                 <Button
                                     className="ml-auto p-3 mr-3"
                                     type="submit"
-                                    disabled={status !== "connected"}
+                                    disabled={
+                                        !(
+                                            status === "connected" &&
+                                            otpInput.length === 6
+                                        )
+                                    }
                                     id="login-submit"
                                 >
                                     Submit
@@ -230,7 +234,7 @@ function LoginResultDialog({ result }: { result: DialogState }) {
             return (
                 <>
                     <DialogHeader>
-                        <DialogTitle className="flex flex-row items-center gap-2">
+                        <DialogTitle className="flex flex-row items-center gap-2 text-lg">
                             <Badge variant="default" className="bg-green-500">
                                 <LucideCheck /> Success
                             </Badge>
@@ -244,10 +248,6 @@ function LoginResultDialog({ result }: { result: DialogState }) {
                     >
                         <Label className="ml-2 col-start-1">Name:</Label>
                         <p className="font-mono col-start-2">
-                            {(() => {
-                                console.log(result.data);
-                                return "";
-                            })()}
                             {result.data.deviceName}
                         </p>
 
@@ -261,13 +261,13 @@ function LoginResultDialog({ result }: { result: DialogState }) {
         case "failure":
             return (
                 <>
-                    <DialogHeader className="flex flex-row">
-                        <DialogTitle>
+                    <DialogHeader className="">
+                        <DialogTitle className="text-lg font-bold flex flex-row items-center gap-2">
                             <Badge variant="destructive">
                                 <LucideX /> Error
                             </Badge>
+                            Failure
                         </DialogTitle>
-                        Failure
                     </DialogHeader>
 
                     <p>{result.err}</p>

@@ -26,14 +26,17 @@ export function saveClientData(config: ClientData): void {
     // do not save jwt to memory
     const c = structuredClone(config) as Config;
     c.credentials.jwt = null;
+    sessionStorage.setItem("jwt", config.credentials.jwt ?? "");
 
     localStorage.setItem("config", JSON.stringify(c));
 }
 
-export function saveConfig(config: Config) {
+export function storeConfig(config: Config) {
     // do not save jwt
     const c = structuredClone(config) as Config;
     c.credentials.jwt = null;
+    // persist jwt in SessionStorage
+    sessionStorage.setItem("jwt", config.credentials.jwt ?? "");
 
     localStorage.setItem("config", JSON.stringify(c));
 }
@@ -41,11 +44,17 @@ export function saveConfig(config: Config) {
 /**
  * Try to retrieve configuration from localStorage
  */
-export function getConfig(): Config | null {
+export function getStoredConfig(): Config | null {
     const config = localStorage.getItem("config");
     if (!config) {
         return null;
     }
 
-    return JSON.parse(config);
+    const c = JSON.parse(config) as Config;
+    const jwt = sessionStorage.getItem("jwt");
+    if (jwt) {
+        c.credentials.jwt = jwt;
+    }
+
+    return c;
 }
