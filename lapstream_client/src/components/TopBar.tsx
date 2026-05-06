@@ -12,8 +12,53 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "./ui/dialog";
+import { ConnectionState } from "./reception/ReceptionWs";
+import { Badge } from "./ui/badge";
+import { Spinner } from "./ui/spinner";
+import { LucideCheck, LucideX } from "lucide-react";
 
-export const TopBar = ({ reauth }: { reauth: () => void }): JSX.Element => {
+function StatusBadge({ status }: { status: ConnectionState }): JSX.Element {
+    switch (status) {
+        case "connecting":
+            return (
+                <Badge variant="secondary">
+                    <Spinner data-icon="inline-start" />
+                    Connecting...
+                </Badge>
+            );
+        case "disconnected":
+            return (
+                <Badge variant="destructive">
+                    <LucideX data-icon="inline-start" />
+                    Disconnected
+                </Badge>
+            );
+        case "connected":
+            return (
+                <Badge variant="default" className="">
+                    <LucideCheck data-icon="inline-start" />
+                    Connected
+                </Badge>
+            );
+        case "error":
+            return (
+                <Badge variant="destructive">
+                    <LucideX data-icon="inline-start" />
+                    Server Connection Error
+                </Badge>
+            );
+        default:
+            throw new Error("invalid State");
+    }
+}
+
+export const TopBar = ({
+    reauth,
+    connStatus,
+}: {
+    reauth: () => void;
+    connStatus: ConnectionState | null;
+}): JSX.Element => {
     const { config, refreshCreds } = useContext(ConfigContext);
 
     return (
@@ -21,9 +66,8 @@ export const TopBar = ({ reauth }: { reauth: () => void }): JSX.Element => {
             <div className="flex flex-row items-center mx-4 mb-1 gap-4">
                 <p className="font-bold text-xl">lapstream</p>
 
-                <Button onClick={refreshCreds} variant="outline">
-                    refresh Authentication
-                </Button>
+                {connStatus && <StatusBadge status={connStatus} />}
+
                 <Dialog>
                     <DialogTrigger asChild>
                         <Button

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "../ui/button";
 import {
     Card,
@@ -10,13 +10,34 @@ import {
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { useApi } from "@/lib/api_access";
-import { toast, useSonner } from "sonner";
+import { toast } from "sonner";
+import { ConnectionState, Handler, useWs } from "./ReceptionWs";
+import z from "zod";
 
-export const ReceptionPage = () => {
+export const ReceptionPage = ({
+    setConnStatus: setConnStatus,
+}: {
+    setConnStatus: (status: ConnectionState) => void;
+}) => {
     const [age, setAge] = useState<number | undefined>(undefined);
     const [name, setName] = useState<string | undefined>(undefined);
+
+    const ws = useWs({
+        confirmCreated: Handler(z.string(), (data) => {
+            toast.success(`Player ${data} created`, {
+                position: "bottom-right",
+            });
+        }),
+    });
+    useEffect(() => {
+        setConnStatus(ws.connStatus);
+    }, [ws.connStatus]);
+
+    useEffect(() => {
+        ws.sendMessage({ type: "echo", data: "test" });
+    }, []);
     const api = useApi();
-    const onSubmit = async (e: React.FormEvent) => {
+    const onSubmit = async (e: React.SubmitEvent) => {
         e.preventDefault();
         if (!name || !age) {
             toast.error("No new player registered", {

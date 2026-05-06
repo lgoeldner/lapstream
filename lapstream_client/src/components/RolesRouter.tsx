@@ -3,7 +3,7 @@
  */
 
 import { ConfigContext } from "./utils/ConfigContext";
-import { JSX, useContext, useEffect, useRef } from "react";
+import { JSX, useContext, useEffect, useRef, useState } from "react";
 import { TopBar } from "./TopBar";
 import { jwtIsExpired } from "@/lib/utils";
 import { Config } from "@/lib/config_provider";
@@ -11,6 +11,7 @@ import { useGlobalError } from "./utils/GlobalErrorProvider";
 import { info, trace, warn } from "@tauri-apps/plugin-log";
 import { ReceptionPage } from "./reception/Reception";
 import { Api, useApi } from "@/lib/api_access";
+import { ConnectionState } from "./reception/ReceptionWs";
 
 export function RolesRouter({
     page,
@@ -65,21 +66,28 @@ export function RolesRouter({
 
         inFlight.current = false;
     };
+    const [connStatus, setConnStatus] = useState<ConnectionState>("connecting");
 
     return (
         <ConfigContext.Provider value={{ config: config!, refreshCreds }}>
             <div className="w-full h-full flex flex-col items-center">
-                <TopBar reauth={reauth} />
-                <RolePage page={page} />
+                <TopBar reauth={reauth} connStatus={connStatus} />
+                <RolePage page={page} setConnStatus={setConnStatus} />
             </div>
         </ConfigContext.Provider>
     );
 }
 
-const RolePage = ({ page }: { page: string }) => {
+const RolePage = ({
+    page,
+    setConnStatus: setConnStatus,
+}: {
+    page: string;
+    setConnStatus: (status: ConnectionState) => void;
+}) => {
     switch (page) {
         case "reception":
-            return <ReceptionPage />;
+            return <ReceptionPage setConnStatus={setConnStatus} />;
         default:
             return <div>Unknown page: {page}</div>;
     }

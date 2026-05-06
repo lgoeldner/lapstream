@@ -18,6 +18,7 @@
     "node": ">=22"
   },
   "dependencies": {
+    "@types/express-ws": "^3.0.6",
     "@types/inquirer": "^9.0.9",
     "cors": "^2.8.6",
     "dotenv": "^16.6.1",
