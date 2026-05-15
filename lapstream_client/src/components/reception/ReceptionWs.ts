@@ -1,6 +1,5 @@
-import { useCallback, useContext, useEffect, useRef, useState } from "react";
-import { ConfigContext } from "../utils/ConfigContext";
-import { useGlobalError } from "../utils/GlobalErrorProvider";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useAuthStore } from "@/stores/authStore";
 import { info, warn } from "@tauri-apps/plugin-log";
 import z from "zod";
 
@@ -9,12 +8,6 @@ export type ConnectionState =
     | "connected"
     | "disconnected"
     | "error";
-type WebSocketRef = {
-    socket: WebSocket | null;
-    connStatus: ConnectionState;
-    reconnectTimeout: ReturnType<typeof setTimeout> | null;
-};
-
 export type WsMessage = { type: string; data?: any | undefined };
 type HandlerT<S extends z.ZodType = z.ZodType> = {
     schema: S;
@@ -63,10 +56,10 @@ export const useWs = (handlers: Handlers) => {
     const handlersRef = useRef<Handlers>(handlers);
     handlersRef.current = handlers;
 
-    const { config } = useContext(ConfigContext);
+    const config = useAuthStore((s) => s.config);
 
     if (!config) {
-        throw new Error("useReceptionWs must be used within a ConfigProvider");
+        throw new Error("useWs requires an authenticated session");
     }
 
     useEffect(() => {

@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { LucideX } from "lucide-react";
 
-export class ErrorBoundary extends React.Component {
+export class ErrorBoundary extends React.Component<{ children?: React.ReactNode }> {
     state = {
         hasErrored: false,
         err: undefined as Error | undefined,

@@ -1,5 +1,4 @@
-import { JSX, useContext } from "react";
-import { ConfigContext } from "./utils/ConfigContext";
+import { JSX } from "react";
 import { Separator } from "./ui/separator";
 import { Button } from "./ui/button";
 import {
@@ -16,6 +15,7 @@ import { ConnectionState } from "./reception/ReceptionWs";
 import { Badge } from "./ui/badge";
 import { Spinner } from "./ui/spinner";
 import { LucideCheck, LucideX } from "lucide-react";
+import { useAuthStore } from "@/stores/authStore";
 
 function StatusBadge({ status }: { status: ConnectionState }): JSX.Element {
     switch (status) {
@@ -53,13 +53,11 @@ function StatusBadge({ status }: { status: ConnectionState }): JSX.Element {
 }
 
 export const TopBar = ({
-    reauth,
     connStatus,
 }: {
-    reauth: () => void;
     connStatus: ConnectionState | null;
 }): JSX.Element => {
-    const { config, refreshCreds } = useContext(ConfigContext);
+    const { config, logout } = useAuthStore();
 
     return (
         <div className="flex flex-col w-full gap-2 p-2">
@@ -87,7 +85,7 @@ export const TopBar = ({
                             </DialogDescription>
                         </DialogHeader>
                         <DialogFooter>
-                            <Button variant="destructive" onClick={reauth}>
+                            <Button variant="destructive" onClick={logout}>
                                 Logout
                             </Button>
                             <DialogClose asChild>

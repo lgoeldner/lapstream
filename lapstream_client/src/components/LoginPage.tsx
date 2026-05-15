@@ -21,8 +21,8 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "./ui/dialog";
-import z from "zod";
-import { Api, registerDeviceResponseSchema } from "@/lib/api_access";
+import { Api } from "@/lib/api_access";
+import type { ClientData } from "@/lib/config_provider";
 
 // display a badge with three possible states: "loading" | "not_connected" | "connected"
 
@@ -53,10 +53,6 @@ function StatusBadge({ status }: { status: string }): JSX.Element {
             throw new Error("invalid State");
     }
 }
-
-export type ClientData = z.infer<typeof registerDeviceResponseSchema> & {
-    base_url: string;
-};
 
 type DialogState =
     | { status: "loading" }
